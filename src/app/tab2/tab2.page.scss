@@ -1,0 +1,353 @@
+.schedule-toolbar {
+  --background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--glass-border);
+  padding: 8px 12px;
+}
+
+.schedule-header-wrap {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1400px;
+  margin: 0 auto;
+
+  .title-meta {
+    .page-title {
+      margin: 0;
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--app-text-main);
+    }
+    .page-subtitle {
+      margin: 2px 0 0 0;
+      font-size: 0.8rem;
+      color: var(--app-text-muted);
+    }
+  }
+
+  .btn-new-apt {
+    --border-radius: 12px;
+    font-weight: 700;
+  }
+}
+
+.filters-toolbar {
+  --background: var(--glass-bg);
+  border-bottom: 1px solid var(--glass-border);
+  padding: 4px 12px;
+}
+
+.filters-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  max-width: 1400px;
+  margin: 0 auto;
+  flex-wrap: wrap;
+
+  .schedule-searchbar {
+    max-width: 450px;
+    --background: rgba(241, 245, 249, 0.6);
+    --border-radius: 12px;
+    --box-shadow: none;
+    padding: 0;
+  }
+
+  .date-chips-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .date-pill {
+      background: rgba(148, 163, 184, 0.15);
+      border: 1px solid var(--glass-border);
+      color: var(--app-text-muted);
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &.active {
+        background: var(--ion-color-primary);
+        color: #ffffff;
+        border-color: var(--ion-color-primary);
+      }
+    }
+
+    .custom-date-picker-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(148, 163, 184, 0.15);
+      border: 1px solid var(--glass-border);
+      padding: 4px 10px;
+      border-radius: 9999px;
+
+      ion-icon {
+        font-size: 1rem;
+        color: var(--ion-color-primary);
+      }
+
+      .mini-date-input {
+        border: none;
+        background: transparent;
+        font-size: 0.78rem;
+        color: var(--app-text-main);
+        outline: none;
+      }
+    }
+  }
+}
+
+.segment-filter-toolbar {
+  --background: var(--glass-bg);
+  border-bottom: 1px solid var(--glass-border);
+  padding: 4px 12px;
+}
+
+.filter-segments-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  max-width: 1400px;
+  margin: 0 auto;
+  flex-wrap: wrap;
+
+  .status-segment {
+    max-width: 480px;
+  }
+
+  .type-filter-chips {
+    display: flex;
+    gap: 6px;
+
+    .type-chip-btn {
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      background: rgba(148, 163, 184, 0.12);
+      color: var(--app-text-muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &.active {
+        background: var(--ion-color-secondary);
+        color: #ffffff;
+      }
+    }
+  }
+}
+
+.schedule-content {
+  --background: var(--app-bg-gradient);
+}
+
+.appointments-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+
+  @media (min-width: 992px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.schedule-apt-card {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+
+  &.card-urgent {
+    border-left: 4px solid var(--ion-color-danger) !important;
+  }
+}
+
+.card-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .time-block {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    .time-text {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: var(--app-text-main);
+    }
+    .date-text {
+      font-size: 0.78rem;
+      color: var(--app-text-muted);
+    }
+  }
+
+  .status-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    .type-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 9999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+
+      &.badge-type-video { background: rgba(99, 102, 241, 0.15); color: var(--ion-color-tertiary); }
+      &.badge-type-in-person { background: rgba(13, 148, 136, 0.15); color: var(--ion-color-primary); }
+      &.badge-type-emergency { background: rgba(239, 68, 68, 0.15); color: var(--ion-color-danger); }
+    }
+
+    .status-badge-chip {
+      font-size: 0.68rem;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+
+      &.status-scheduled { background: rgba(14, 165, 233, 0.15); color: #0284c7; }
+      &.status-checked-in { background: rgba(245, 158, 11, 0.15); color: #d97706; }
+      &.status-in-progress { background: rgba(99, 102, 241, 0.15); color: #6366f1; }
+      &.status-completed { background: rgba(16, 185, 129, 0.15); color: #16a34a; }
+      &.status-cancelled { background: rgba(239, 68, 68, 0.15); color: #dc2626; }
+    }
+  }
+}
+
+.card-patient-body {
+  display: flex;
+  gap: 14px;
+  cursor: pointer;
+
+  .pat-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  .pat-meta {
+    flex: 1;
+
+    .pat-name-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .pat-name {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: var(--app-text-main);
+      }
+      .pat-age {
+        font-size: 0.78rem;
+        color: var(--app-text-muted);
+      }
+      .pat-blood {
+        background: #0f172a;
+        color: #ffffff;
+        font-size: 0.65rem;
+        font-weight: 800;
+        padding: 1px 5px;
+        border-radius: 4px;
+      }
+    }
+
+    .pat-complaint {
+      margin: 4px 0 8px 0;
+      font-size: 0.88rem;
+      color: var(--app-text-main);
+    }
+
+    .chips-flex {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+
+      .mini-sym {
+        font-size: 0.72rem;
+        background: rgba(148, 163, 184, 0.15);
+        color: var(--app-text-muted);
+        padding: 2px 7px;
+        border-radius: 6px;
+        font-weight: 600;
+      }
+
+      .vital-warn {
+        font-size: 0.72rem;
+        font-weight: 700;
+        background: rgba(239, 68, 68, 0.15);
+        color: var(--ion-color-danger);
+        padding: 2px 8px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+      }
+    }
+  }
+}
+
+.card-footer-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--glass-border);
+  padding-top: 10px;
+  flex-wrap: wrap;
+  gap: 10px;
+
+  .billing-summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .price-val {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--app-text-main);
+    }
+
+    .pay-chip {
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: #fee2e2;
+      color: #b91c1c;
+
+      &.paid {
+        background: #dcfce7;
+        color: #15803d;
+      }
+    }
+  }
+
+  .btn-cluster {
+    display: flex;
+    gap: 6px;
+
+    ion-button {
+      --border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+  }
+}
+
+.schedule-fab {
+  margin: 16px;
+}

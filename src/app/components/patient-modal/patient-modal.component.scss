@@ -1,0 +1,471 @@
+.modal-toolbar {
+  --background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.patient-header-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid var(--ion-color-primary);
+}
+
+.patient-title-name {
+  margin: 0;
+  font-size: 1.12rem;
+  font-weight: 700;
+  color: var(--app-text-main);
+}
+
+.patient-mrn-badge {
+  font-size: 0.78rem;
+  color: var(--app-text-muted);
+}
+
+.segment-toolbar {
+  --background: var(--glass-bg);
+  border-bottom: 1px solid var(--glass-border);
+  padding: 0 10px;
+}
+
+.patient-ehr-segment {
+  ion-segment-button {
+    --indicator-color: var(--ion-color-primary);
+    --color-checked: var(--ion-color-primary);
+    font-size: 0.82rem;
+    font-weight: 600;
+  }
+}
+
+.ehr-container {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.vitals-header-row,
+.section-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.section-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--app-text-main);
+}
+
+.section-subtitle {
+  margin: 2px 0 0 0;
+  font-size: 0.8rem;
+  color: var(--app-text-muted);
+}
+
+.add-vitals-box,
+.add-note-box {
+  padding: 18px;
+  border-radius: 16px;
+  margin-bottom: 20px;
+  border: 1px solid var(--glass-border);
+}
+
+.box-title {
+  margin: 0 0 14px 0;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--ion-color-primary);
+}
+
+.vitals-btn-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+/* Vitals Cards Grid */
+.vitals-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.vital-card {
+  padding: 16px;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 140px;
+  position: relative;
+  overflow: hidden;
+}
+
+.vital-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.vital-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--app-text-muted);
+}
+
+.vital-icon {
+  font-size: 1.4rem;
+}
+
+.vital-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 8px 0;
+}
+
+.vital-number {
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: var(--app-text-main);
+}
+
+.vital-unit {
+  font-size: 0.85rem;
+  color: var(--app-text-muted);
+  font-weight: 600;
+}
+
+/* SVG ECG line */
+.ecg-wave-container {
+  height: 30px;
+  margin: 4px 0;
+  overflow: hidden;
+}
+
+.ecg-svg {
+  width: 100%;
+  height: 100%;
+}
+
+.ecg-path {
+  fill: none;
+  stroke: var(--ion-color-danger);
+  stroke-width: 2.2;
+  stroke-dasharray: 100;
+  animation: ecgPulse 3s linear infinite;
+}
+
+.bp-bar-box {
+  width: 100%;
+  height: 6px;
+  background: rgba(148, 163, 184, 0.2);
+  border-radius: 9999px;
+  overflow: hidden;
+  margin: 6px 0;
+}
+
+.bp-bar-fill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.4s ease;
+}
+
+.bg-danger {
+  background: var(--ion-color-danger);
+}
+
+.bg-success {
+  background: var(--ion-color-success);
+}
+
+.vital-status-pill {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  align-self: flex-start;
+}
+
+.status-normal {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--ion-color-success);
+}
+
+.status-alert {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--ion-color-danger);
+}
+
+/* Tables */
+.table-responsive {
+  overflow-x: auto;
+}
+
+.clinical-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+
+  th, td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--glass-border);
+  }
+
+  th {
+    font-size: 0.76rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--app-text-muted);
+  }
+}
+
+.bp-tag {
+  background: rgba(13, 148, 136, 0.12);
+  color: var(--ion-color-primary);
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-weight: 700;
+}
+
+/* Tags and Chips */
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 44px;
+  margin-bottom: 12px;
+}
+
+.allergy-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+
+  ion-icon {
+    cursor: pointer;
+    font-size: 1rem;
+  }
+}
+
+.severity-severe {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--ion-color-danger);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.severity-moderate {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--ion-color-warning);
+}
+
+.severity-mild {
+  background: rgba(100, 116, 139, 0.15);
+  color: var(--app-text-muted);
+}
+
+.condition-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  background: rgba(99, 102, 241, 0.12);
+  color: var(--ion-color-tertiary);
+  font-size: 0.8rem;
+  font-weight: 600;
+
+  ion-icon {
+    cursor: pointer;
+    font-size: 1rem;
+  }
+}
+
+.add-tag-row {
+  display: flex;
+  gap: 8px;
+}
+
+/* Lab cards */
+.labs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.lab-report-card {
+  padding: 16px;
+  border-radius: 14px;
+}
+
+.lab-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.lab-category-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--ion-color-primary);
+  text-transform: uppercase;
+}
+
+.lab-name {
+  margin: 2px 0 0 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.lab-date {
+  font-size: 0.78rem;
+  color: var(--app-text-muted);
+}
+
+.status-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 9999px;
+}
+
+.badge-normal {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--ion-color-success);
+}
+
+.badge-borderline {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--ion-color-warning);
+}
+
+.badge-abnormal,
+.badge-critical {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--ion-color-danger);
+}
+
+.lab-result-line {
+  font-size: 0.95rem;
+  margin-bottom: 4px;
+
+  .result-label {
+    font-weight: 600;
+    margin-right: 6px;
+  }
+  .result-val {
+    font-weight: 700;
+  }
+}
+
+.lab-ref-line {
+  font-size: 0.82rem;
+  color: var(--app-text-muted);
+  margin-bottom: 6px;
+}
+
+.lab-notes-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  background: rgba(13, 148, 136, 0.08);
+  padding: 8px 12px;
+  border-radius: 8px;
+  color: var(--ion-color-primary);
+  margin-top: 6px;
+}
+
+/* SOAP Notes */
+.notes-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.note-card {
+  padding: 16px;
+  border-radius: 14px;
+}
+
+.note-meta-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--app-text-muted);
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--glass-border);
+  padding-bottom: 6px;
+}
+
+.soap-block {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+}
+
+.soap-letter {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.letter-s { background: #e0f2fe; color: #0284c7; }
+.letter-o { background: #fef3c7; color: #d97706; }
+.letter-a { background: #fce7f3; color: #db2777; }
+.letter-p { background: #dcfce7; color: #16a34a; }
+
+.empty-state-card {
+  padding: 30px;
+  text-align: center;
+  border-radius: 16px;
+  color: var(--app-text-muted);
+
+  .empty-state-icon {
+    font-size: 3rem;
+    margin-bottom: 10px;
+    opacity: 0.6;
+  }
+}
+
+.modal-footer {
+  --background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--glass-border);
+  padding: 12px 18px;
+}
+
+.action-buttons-row {
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+
+  ion-button {
+    --border-radius: 12px;
+    font-weight: 600;
+  }
+}

@@ -1,0 +1,360 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar class="main-dashboard-toolbar">
+    <div class="header-container">
+      <!-- Doctor Profile Greeting & Status -->
+      <div class="doctor-brand-box" *ngIf="doctorProfile$ | async as doc">
+        <div class="avatar-wrapper">
+          <img [src]="doc.avatar" alt="Dr. Alexander Vance" class="doc-avatar" />
+          <span class="status-indicator-dot" [class]="doc.availabilityStatus"></span>
+        </div>
+        <div class="doc-text-meta">
+          <div class="doc-greeting-row">
+            <span class="greeting-sub">Welcome back,</span>
+            <span class="clinic-room-pill"><ion-icon name="business-outline"></ion-icon> Suite 402</span>
+          </div>
+          <h1 class="doc-name">{{ doc.name }}</h1>
+          <p class="doc-spec">{{ doc.title }}</p>
+        </div>
+      </div>
+
+      <!-- Controls: Availability, Clock, Dark/Light Mode -->
+      <div class="header-controls-box" *ngIf="doctorProfile$ | async as doc">
+        <div class="clock-display">
+          <ion-icon name="time-outline"></ion-icon>
+          <span>{{ currentTime }}</span>
+        </div>
+
+        <!-- Availability Status Selector -->
+        <ion-select [value]="doc.availabilityStatus" (ionChange)="setDoctorStatus($event.detail.value)"
+          interface="popover" class="status-select-pill" [class]="'status-' + doc.availabilityStatus">
+          <ion-select-option value="online">🟢 Available & Online</ion-select-option>
+          <ion-select-option value="in-consult">🟡 In Consultation</ion-select-option>
+          <ion-select-option value="break">☕ Short Break</ion-select-option>
+          <ion-select-option value="offline">⚪ Offline / Rounds</ion-select-option>
+        </ion-select>
+
+        <!-- Theme Toggle -->
+        <ion-button (click)="toggleTheme()" fill="clear" class="btn-theme-toggle" color="medium">
+          <ion-icon [name]="isDark ? 'sunny-outline' : 'moon-outline'" slot="icon-only"></ion-icon>
+        </ion-button>
+      </div>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="dashboard-content" [fullscreen]="true">
+  <div class="app-container">
+
+    <!-- CRITICAL VITALS REAL-TIME ALERT BANNER -->
+    <div class="critical-alert-card glass-card animate-fade-in">
+      <div class="alert-icon-box pulse-badge-danger">
+        <ion-icon name="warning"></ion-icon>
+      </div>
+      <div class="alert-text-content">
+        <div class="alert-header">
+          <span class="alert-title">TELEMETRY SPO2/BP SPIKE DETECTED</span>
+          <span class="alert-time">2 mins ago via RPM</span>
+        </div>
+        <p class="alert-desc">
+          <strong>Marcus Chen (42y)</strong>: Blood Pressure recorded <strong>165/102 mmHg</strong> with resting heart rate <strong>104 bpm</strong>. Telehealth session requested.
+        </p>
+      </div>
+      <div class="alert-action-box">
+        <ion-button (click)="openPatientChart('pat-102')" size="small" fill="outline" color="danger">
+          View Chart
+        </ion-button>
+        <ion-button (click)="joinTelehealthSession('apt-1')" size="small" color="danger">
+          <ion-icon name="videocam" slot="start"></ion-icon>
+          Join Video
+        </ion-button>
+      </div>
+    </div>
+
+    <!-- METRICS OVERVIEW CARDS (4 Cards Grid) -->
+    <div class="metrics-grid animate-fade-in" *ngIf="metrics$ | async as metrics">
+
+      <!-- Today's Consultations -->
+      <div class="metric-card glass-card">
+        <div class="metric-card-top">
+          <span class="metric-label">Today's Appointments</span>
+          <div class="metric-icon-wrap gradient-teal">
+            <ion-icon name="calendar"></ion-icon>
+          </div>
+        </div>
+        <div class="metric-main-val">
+          <span class="metric-num">{{ metrics.totalToday }}</span>
+          <span class="metric-trend text-success"><ion-icon name="checkmark-done"></ion-icon> {{ metrics.completedToday }} completed</span>
+        </div>
+        <div class="progress-bar-thin">
+          <div class="progress-fill" [style.width.%]="(metrics.completedToday / (metrics.totalToday || 1)) * 100"></div>
+        </div>
+        <span class="metric-sub">{{ metrics.pendingToday }} pending in queue</span>
+      </div>
+
+      <!-- Telehealth / Video Queue -->
+      <div class="metric-card glass-card">
+        <div class="metric-card-top">
+          <span class="metric-label">Telehealth Encounters</span>
+          <div class="metric-icon-wrap gradient-indigo">
+            <ion-icon name="videocam"></ion-icon>
+          </div>
+        </div>
+        <div class="metric-main-val">
+          <span class="metric-num">{{ metrics.telehealthCount }}</span>
+          <span class="metric-badge-live pulse-badge-success">Encrypted HD</span>
+        </div>
+        <div class="progress-bar-thin">
+          <div class="progress-fill fill-indigo" style="width: 75%"></div>
+        </div>
+        <span class="metric-sub">1 active call waiting in lobby</span>
+      </div>
+
+      <!-- Critical / Triage Alerts -->
+      <div class="metric-card glass-card">
+        <div class="metric-card-top">
+          <span class="metric-label">Priority Triage</span>
+          <div class="metric-icon-wrap gradient-rose">
+            <ion-icon name="pulse"></ion-icon>
+          </div>
+        </div>
+        <div class="metric-main-val">
+          <span class="metric-num text-danger">{{ metrics.emergencyCount + metrics.criticalAlertsCount }}</span>
+          <span class="metric-trend text-danger"><ion-icon name="alert-circle"></ion-icon> High Urgency</span>
+        </div>
+        <div class="progress-bar-thin">
+          <div class="progress-fill fill-rose" style="width: 40%"></div>
+        </div>
+        <span class="metric-sub">Immediate physician review</span>
+      </div>
+
+      <!-- Daily Revenue & Satisfaction -->
+      <div class="metric-card glass-card">
+        <div class="metric-card-top">
+          <span class="metric-label">Estimated Day Billing</span>
+          <div class="metric-icon-wrap gradient-amber">
+            <ion-icon name="cash"></ion-icon>
+          </div>
+        </div>
+        <div class="metric-main-val">
+          <span class="metric-num">${{ metrics.estimatedRevenue }}</span>
+          <span class="rating-badge"><ion-icon name="star"></ion-icon> 4.96</span>
+        </div>
+        <div class="progress-bar-thin">
+          <div class="progress-fill fill-amber" style="width: 82%"></div>
+        </div>
+        <span class="metric-sub">Avg. consult: 18 mins</span>
+      </div>
+
+    </div>
+
+    <!-- QUICK CLINICAL ACTIONS BAR -->
+    <div class="quick-actions-bar glass-card animate-fade-in">
+      <div class="bar-title">Quick Actions:</div>
+      <div class="action-buttons-group">
+        <ion-button (click)="openNewAppointmentModal()" color="primary" class="quick-btn">
+          <ion-icon name="calendar-outline" slot="start"></ion-icon>
+          + New Appointment
+        </ion-button>
+        <ion-button (click)="openPrescriptionBuilder()" color="secondary" class="quick-btn">
+          <ion-icon name="document-text-outline" slot="start"></ion-icon>
+          + Issue e-Rx
+        </ion-button>
+        <ion-button (click)="openPatientChart('new')" color="tertiary" class="quick-btn">
+          <ion-icon name="person-add-outline" slot="start"></ion-icon>
+          + Add Patient
+        </ion-button>
+        <ion-button (click)="joinTelehealthSession('apt-1')" color="danger" fill="outline" class="quick-btn">
+          <ion-icon name="videocam-outline" slot="start"></ion-icon>
+          Live Telehealth
+        </ion-button>
+      </div>
+    </div>
+
+    <!-- TWO-COLUMN WORKSPACE: LEFT = PATIENT QUEUE, RIGHT = RPM TELEMETRY MONITOR -->
+    <div class="dashboard-columns-layout">
+
+      <!-- COLUMN 1: TODAY'S APPOINTMENT QUEUE (2/3 width on desktop) -->
+      <div class="queue-column">
+        <div class="section-top-bar">
+          <div class="section-title-wrap">
+            <h2 class="section-h2">Today's Patient Schedule</h2>
+            <span class="section-badge">Nov 11, 2026</span>
+          </div>
+
+          <!-- Filter Segment -->
+          <ion-segment [(ngModel)]="activeFilter" mode="ios" class="queue-filter-segment">
+            <ion-segment-button value="all">
+              <ion-label>All</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="in-person">
+              <ion-label>In-Clinic</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="video">
+              <ion-label>Video</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="emergency">
+              <ion-label>Urgent</ion-label>
+            </ion-segment-button>
+          </ion-segment>
+        </div>
+
+        <!-- Appointment Cards List -->
+        <div class="appointments-list-container" *ngIf="appointments$ | async as apps">
+          <ng-container *ngFor="let apt of apps">
+            <div *ngIf="activeFilter === 'all' || apt.type === activeFilter || (activeFilter === 'emergency' && apt.urgency === 'urgent')"
+              class="appointment-item-card glass-card animate-fade-in"
+              [class.highlight-emergency]="apt.urgency === 'urgent' || apt.urgency === 'emergency'">
+
+              <div class="apt-card-main-row">
+                <!-- Patient Avatar with Blood Group -->
+                <div class="apt-avatar-box" (click)="openPatientChart(apt.patientId)">
+                  <img [src]="apt.patientAvatar" [alt]="apt.patientName" class="patient-avatar-img" />
+                  <span class="blood-group-tag">{{ apt.patientBloodGroup }}</span>
+                </div>
+
+                <!-- Patient & Complaint Info -->
+                <div class="apt-info-box" (click)="openPatientChart(apt.patientId)">
+                  <div class="patient-name-line">
+                    <h3 class="patient-name">{{ apt.patientName }}</h3>
+                    <span class="age-gender-text">{{ apt.patientAge }}y, {{ apt.patientGender }}</span>
+                    <span class="type-pill" [class]="'type-' + apt.type">
+                      <ion-icon [name]="apt.type === 'video' ? 'videocam' : (apt.type === 'in-person' ? 'business' : 'flask')"></ion-icon>
+                      {{ apt.type | titlecase }}
+                    </span>
+                  </div>
+
+                  <p class="chief-complaint-text">
+                    <ion-icon name="medkit-outline"></ion-icon>
+                    {{ apt.chiefComplaint }}
+                  </p>
+
+                  <div class="symptoms-chips-row">
+                    <span *ngFor="let s of apt.symptoms" class="mini-symptom-chip">{{ s }}</span>
+                    <span *ngIf="apt.vitalAlert" class="vital-alert-chip pulse-badge-danger">
+                      <ion-icon name="pulse"></ion-icon> {{ apt.vitalAlert }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Time Slot & Status -->
+                <div class="apt-time-status-box">
+                  <div class="time-slot-badge">
+                    <ion-icon name="time-outline"></ion-icon>
+                    <span>{{ apt.timeSlot }}</span>
+                  </div>
+                  <span class="status-chip" [class]="'status-' + apt.status">
+                    {{ apt.status | uppercase }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Card Action Buttons -->
+              <div class="apt-card-actions-row">
+                <div class="fee-status">
+                  <span class="fee-amount">${{ apt.consultationFee }}</span>
+                  <span class="payment-badge" [class.paid]="apt.isPaid">{{ apt.isPaid ? 'PAID' : 'DUE' }}</span>
+                </div>
+
+                <div class="actions-buttons-cluster">
+                  <ion-button (click)="openPatientChart(apt.patientId)" fill="outline" size="small" color="primary">
+                    <ion-icon name="folder-open-outline" slot="start"></ion-icon>
+                    Chart / EHR
+                  </ion-button>
+
+                  <ion-button (click)="openPrescriptionBuilder(apt.patientId)" fill="outline" size="small" color="secondary">
+                    <ion-icon name="document-text-outline" slot="start"></ion-icon>
+                    Rx
+                  </ion-button>
+
+                  <ion-button *ngIf="apt.type === 'video'" (click)="joinVideoRoom(apt)" size="small" color="primary">
+                    <ion-icon name="videocam-outline" slot="start"></ion-icon>
+                    Start Video
+                  </ion-button>
+
+                  <ion-button *ngIf="apt.status !== 'completed'" (click)="markAsCompleted(apt, $event)" size="small" color="success">
+                    <ion-icon name="checkmark-outline" slot="start"></ion-icon>
+                    Done
+                  </ion-button>
+                </div>
+              </div>
+
+            </div>
+          </ng-container>
+        </div>
+      </div>
+
+      <!-- COLUMN 2: REMOTE PATIENT MONITORING (RPM) HUD (1/3 width on desktop) -->
+      <div class="rpm-column">
+        <div class="rpm-monitor-card glass-card">
+          <div class="rpm-card-header">
+            <div class="flex-align">
+              <span class="rpm-live-dot pulse-badge-success"></span>
+              <h3 class="rpm-title">Continuous RPM Telemetry</h3>
+            </div>
+            <span class="rpm-badge">Live Sensor Stream</span>
+          </div>
+
+          <!-- Simulated Live Patient ECG Stream -->
+          <div class="live-patient-telemetry">
+            <div class="telemetry-patient-header">
+              <span class="patient-label">Connected: <strong>Marcus Chen (42y)</strong></span>
+              <span class="device-type">Apple Watch S10 + Omron BP</span>
+            </div>
+
+            <div class="live-ecg-canvas-box">
+              <svg class="live-ecg-svg" viewBox="0 0 300 60">
+                <path class="live-ecg-path" d="M 0,30 L 50,30 L 60,10 L 70,50 L 80,18 L 90,36 L 100,30 L 170,30 L 180,10 L 190,50 L 200,18 L 210,36 L 220,30 L 300,30" />
+              </svg>
+            </div>
+
+            <div class="rpm-vitals-readout">
+              <div class="rpm-val-box">
+                <span class="val-label">HR</span>
+                <span class="val-num text-danger">104 <small>bpm</small></span>
+              </div>
+              <div class="rpm-val-box">
+                <span class="val-label">BP</span>
+                <span class="val-num text-danger">165/102</span>
+              </div>
+              <div class="rpm-val-box">
+                <span class="val-label">SpO2</span>
+                <span class="val-num text-success">98%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Drug Interaction & Medical Calculator Tool -->
+          <div class="clinical-tools-panel">
+            <h4 class="tools-heading">Clinical Fast Tools</h4>
+            <div class="tools-grid">
+              <div class="tool-btn" (click)="openPrescriptionBuilder('pat-102')">
+                <ion-icon name="shield-half-outline" color="primary"></ion-icon>
+                <span>Drug Alerts</span>
+              </div>
+              <div class="tool-btn" (click)="openPatientChart('pat-101')">
+                <ion-icon name="calculator-outline" color="secondary"></ion-icon>
+                <span>BMI & GFR</span>
+              </div>
+              <div class="tool-btn" (click)="openNewAppointmentModal()">
+                <ion-icon name="add-circle-outline" color="tertiary"></ion-icon>
+                <span>Fast Triage</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Clinic Hours Card -->
+          <div class="clinic-status-box" *ngIf="doctorProfile$ | async as doc">
+            <div class="clinic-time-info">
+              <span class="info-title">Today's Clinic Hours</span>
+              <span class="info-time">{{ doc.clinicSchedule.startTime }} &mdash; {{ doc.clinicSchedule.endTime }}</span>
+            </div>
+            <span class="slot-badge">{{ doc.clinicSchedule.slotDurationMinutes }} min / slot</span>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</ion-content>

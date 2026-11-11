@@ -1,0 +1,146 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar class="schedule-toolbar">
+    <div class="schedule-header-wrap">
+      <div class="title-meta">
+        <h1 class="page-title">Appointments & Schedule</h1>
+        <p class="page-subtitle">Manage in-clinic patient queue & telehealth consultations</p>
+      </div>
+
+      <ion-button (click)="openNewAppointmentModal()" color="primary" class="btn-new-apt">
+        <ion-icon name="add-outline" slot="start"></ion-icon>
+        Schedule Appointment
+      </ion-button>
+    </div>
+  </ion-toolbar>
+
+  <!-- Search & Date Filter Bar -->
+  <ion-toolbar class="filters-toolbar">
+    <div class="filters-container">
+      <ion-searchbar [(ngModel)]="searchQuery" placeholder="Search by patient, MRN, complaint..."
+        class="schedule-searchbar" debounce="200">
+      </ion-searchbar>
+
+      <div class="date-chips-group">
+        <button *ngFor="let tab of dateTabs" (click)="setDateFilter(tab.date)"
+          class="date-pill" [class.active]="selectedDate === tab.date">
+          {{ tab.label }}
+        </button>
+        <div class="custom-date-picker-wrap">
+          <ion-icon name="calendar-outline"></ion-icon>
+          <input type="date" [(ngModel)]="selectedDate" class="mini-date-input" />
+        </div>
+      </div>
+    </div>
+  </ion-toolbar>
+
+  <!-- Segment Filters Toolbar -->
+  <ion-toolbar class="segment-filter-toolbar">
+    <div class="filter-segments-wrapper">
+      <ion-segment [(ngModel)]="selectedStatusFilter" mode="ios" class="status-segment">
+        <ion-segment-button value="all"><ion-label>All Status</ion-label></ion-segment-button>
+        <ion-segment-button value="scheduled"><ion-label>Scheduled</ion-label></ion-segment-button>
+        <ion-segment-button value="checked-in"><ion-label>Checked In</ion-label></ion-segment-button>
+        <ion-segment-button value="in-progress"><ion-label>In Room</ion-label></ion-segment-button>
+        <ion-segment-button value="completed"><ion-label>Done</ion-label></ion-segment-button>
+      </ion-segment>
+
+      <div class="type-filter-chips">
+        <span class="type-chip-btn" [class.active]="selectedTypeFilter === 'all'" (click)="selectedTypeFilter = 'all'">All Types</span>
+        <span class="type-chip-btn" [class.active]="selectedTypeFilter === 'in-person'" (click)="selectedTypeFilter = 'in-person'">In-Clinic</span>
+        <span class="type-chip-btn" [class.active]="selectedTypeFilter === 'video'" (click)="selectedTypeFilter = 'video'">Telehealth</span>
+        <span class="type-chip-btn" [class.active]="selectedTypeFilter === 'emergency'" (click)="selectedTypeFilter = 'emergency'">Emergency</span>
+      </div>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="schedule-content">
+  <div class="app-container">
+
+    <div class="appointments-grid" *ngIf="appointments$ | async as apps">
+      <ng-container *ngFor="let apt of apps">
+        <div *ngIf="matchesFilter(apt)" class="schedule-apt-card glass-card animate-fade-in"
+          [class.card-urgent]="apt.urgency === 'urgent' || apt.urgency === 'emergency'">
+
+          <div class="card-header-bar">
+            <div class="time-block">
+              <ion-icon name="time-outline" color="primary"></ion-icon>
+              <span class="time-text">{{ apt.timeSlot }}</span>
+              <span class="date-text">&bull; {{ apt.date }}</span>
+            </div>
+
+            <div class="status-group">
+              <span class="type-badge" [class]="'badge-type-' + apt.type">
+                <ion-icon [name]="apt.type === 'video' ? 'videocam' : 'business'"></ion-icon>
+                {{ apt.type | titlecase }}
+              </span>
+              <span class="status-badge-chip" [class]="'status-' + apt.status">
+                {{ apt.status | uppercase }}
+              </span>
+            </div>
+          </div>
+
+          <div class="card-patient-body" (click)="openPatientChart(apt.patientId)">
+            <img [src]="apt.patientAvatar" [alt]="apt.patientName" class="pat-avatar" />
+            <div class="pat-meta">
+              <div class="pat-name-row">
+                <h3 class="pat-name">{{ apt.patientName }}</h3>
+                <span class="pat-age">{{ apt.patientAge }}y, {{ apt.patientGender }}</span>
+                <span class="pat-blood">{{ apt.patientBloodGroup }}</span>
+              </div>
+              <p class="pat-complaint">
+                <strong>Chief Complaint:</strong> {{ apt.chiefComplaint }}
+              </p>
+              <div class="chips-flex">
+                <span *ngFor="let s of apt.symptoms" class="mini-sym">{{ s }}</span>
+                <span *ngIf="apt.vitalAlert" class="vital-warn pulse-badge-danger">
+                  <ion-icon name="pulse"></ion-icon> {{ apt.vitalAlert }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-footer-controls">
+            <div class="billing-summary">
+              <span class="price-val">${{ apt.consultationFee }}</span>
+              <span class="pay-chip" [class.paid]="apt.isPaid">{{ apt.isPaid ? 'PAID' : 'PENDING' }}</span>
+            </div>
+
+            <div class="btn-cluster">
+              <ion-button (click)="openPatientChart(apt.patientId)" fill="outline" size="small" color="primary">
+                <ion-icon name="folder-open-outline" slot="start"></ion-icon>
+                Chart
+              </ion-button>
+
+              <ion-button (click)="openPrescriptionBuilder(apt.patientId)" fill="outline" size="small" color="secondary">
+                <ion-icon name="document-text-outline" slot="start"></ion-icon>
+                Rx
+              </ion-button>
+
+              <ion-button *ngIf="apt.type === 'video'" (click)="joinVideoRoom(apt)" size="small" color="tertiary">
+                <ion-icon name="videocam-outline" slot="start"></ion-icon>
+                Join Call
+              </ion-button>
+
+              <ion-button (click)="editAppointment(apt)" fill="clear" size="small" color="medium">
+                <ion-icon name="create-outline" slot="icon-only"></ion-icon>
+              </ion-button>
+
+              <ion-button *ngIf="apt.status !== 'completed'" (click)="updateStatus(apt, 'completed', $event)" size="small" color="success">
+                <ion-icon name="checkmark-done-outline" slot="icon-only"></ion-icon>
+              </ion-button>
+            </div>
+          </div>
+
+        </div>
+      </ng-container>
+    </div>
+
+  </div>
+
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed" class="schedule-fab">
+    <ion-fab-button (click)="openNewAppointmentModal()" color="primary">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+</ion-content>

@@ -1,0 +1,133 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar class="patient-toolbar">
+    <div class="patient-header-wrap">
+      <div class="title-meta">
+        <h1 class="page-title">Patient Directory & EHR</h1>
+        <p class="page-subtitle">Access complete medical records, telemetry & clinical histories</p>
+      </div>
+
+      <ion-button (click)="openPatientModal()" color="primary" class="btn-new-patient">
+        <ion-icon name="person-add-outline" slot="start"></ion-icon>
+        Register New Patient
+      </ion-button>
+    </div>
+  </ion-toolbar>
+
+  <!-- Filter & Search Toolbar -->
+  <ion-toolbar class="filters-toolbar">
+    <div class="filters-container">
+      <ion-searchbar [(ngModel)]="searchQuery" placeholder="Search by patient name, MRN, phone number..."
+        class="patient-searchbar" debounce="200">
+      </ion-searchbar>
+
+      <div class="condition-chips-group">
+        <span class="chip-btn" [class.active]="conditionFilter === 'all'" (click)="conditionFilter = 'all'">All Patients</span>
+        <span class="chip-btn" [class.active]="conditionFilter === 'critical'" (click)="conditionFilter = 'critical'">Critical Alert</span>
+        <span class="chip-btn" [class.active]="conditionFilter === 'hypertension'" (click)="conditionFilter = 'hypertension'">Hypertension</span>
+        <span class="chip-btn" [class.active]="conditionFilter === 'diabetes'" (click)="conditionFilter = 'diabetes'">Diabetes</span>
+        <span class="chip-btn" [class.active]="conditionFilter === 'valve'" (click)="conditionFilter = 'valve'">Cardiac / Valve</span>
+      </div>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="patient-content">
+  <div class="app-container">
+
+    <div class="patient-cards-grid" *ngIf="patients$ | async as patientList">
+      <ng-container *ngFor="let p of patientList">
+        <div *ngIf="matchesFilter(p)" class="patient-card glass-card animate-fade-in" (click)="openPatientModal(p.id)">
+
+          <!-- Top Meta Row -->
+          <div class="patient-card-header">
+            <div class="patient-main-info">
+              <img [src]="p.avatar" [alt]="p.name" class="patient-avatar" />
+              <div>
+                <div class="name-blood-line">
+                  <h3 class="patient-name">{{ p.name }}</h3>
+                  <span class="blood-pill">{{ p.bloodGroup }}</span>
+                </div>
+                <span class="mrn-line">{{ p.mrn }} &bull; {{ p.age }} yrs &bull; {{ p.gender }}</span>
+                <span class="phone-line"><ion-icon name="call-outline"></ion-icon> {{ p.phone }}</span>
+              </div>
+            </div>
+
+            <div class="patient-badge-right">
+              <span class="last-visit-tag">Last: {{ p.lastVisitDate }}</span>
+              <span *ngIf="p.currentVitals?.bloodPressureSystolic! >= 140" class="vital-alert-pill pulse-badge-danger">
+                High BP Alert
+              </span>
+            </div>
+          </div>
+
+          <!-- Current Vitals Row -->
+          <div class="vitals-row-strip" *ngIf="p.currentVitals">
+            <div class="mini-vital-box">
+              <span class="v-label">BP (mmHg)</span>
+              <span class="v-val" [class.text-danger]="p.currentVitals.bloodPressureSystolic >= 140">
+                {{ p.currentVitals.bloodPressureSystolic }}/{{ p.currentVitals.bloodPressureDiastolic }}
+              </span>
+            </div>
+            <div class="mini-vital-box">
+              <span class="v-label">HR</span>
+              <span class="v-val" [class.text-danger]="p.currentVitals.heartRate > 100">
+                {{ p.currentVitals.heartRate }} bpm
+              </span>
+            </div>
+            <div class="mini-vital-box">
+              <span class="v-label">SpO2</span>
+              <span class="v-val text-success">
+                {{ p.currentVitals.oxygenSaturation }}%
+              </span>
+            </div>
+            <div class="mini-vital-box" *ngIf="p.currentVitals.bloodGlucose">
+              <span class="v-label">Glucose</span>
+              <span class="v-val">
+                {{ p.currentVitals.bloodGlucose }} mg/dL
+              </span>
+            </div>
+          </div>
+
+          <!-- Chronic Conditions & Allergies Tags -->
+          <div class="tags-row">
+            <span *ngFor="let c of p.chronicConditions" class="cond-tag">{{ c }}</span>
+            <span *ngFor="let a of p.allergies" class="allergy-warn-tag">
+              <ion-icon name="warning"></ion-icon> {{ a.allergen }}
+            </span>
+          </div>
+
+          <!-- Insurance & Actions Footer -->
+          <div class="card-footer-actions">
+            <div class="insurance-meta">
+              <ion-icon name="shield-outline" color="primary"></ion-icon>
+              <span>{{ p.insurance.provider }}</span>
+            </div>
+
+            <div class="action-buttons-wrap">
+              <ion-button (click)="$event.stopPropagation(); scheduleForPatient(p.id)" fill="outline" size="small" color="primary">
+                <ion-icon name="calendar-outline" slot="start"></ion-icon>
+                Schedule
+              </ion-button>
+              <ion-button (click)="$event.stopPropagation(); issueRxForPatient(p.id)" fill="outline" size="small" color="secondary">
+                <ion-icon name="document-text-outline" slot="start"></ion-icon>
+                e-Rx
+              </ion-button>
+              <ion-button (click)="$event.stopPropagation(); openPatientModal(p.id)" size="small" color="primary">
+                <ion-icon name="open-outline" slot="start"></ion-icon>
+                Open EHR
+              </ion-button>
+            </div>
+          </div>
+
+        </div>
+      </ng-container>
+    </div>
+
+  </div>
+
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed" class="patient-fab">
+    <ion-fab-button (click)="openPatientModal()" color="primary">
+      <ion-icon name="person-add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+</ion-content>

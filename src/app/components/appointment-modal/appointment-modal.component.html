@@ -1,0 +1,168 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar class="modal-toolbar">
+    <ion-title>
+      <div class="toolbar-title-box">
+        <ion-icon [name]="isEditMode ? 'create-outline' : 'calendar-number-outline'" color="primary"></ion-icon>
+        <span>{{ isEditMode ? 'Edit Clinical Appointment' : 'Schedule New Appointment' }}</span>
+      </div>
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="dismiss()" fill="clear" color="medium">
+        <ion-icon name="close-circle-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding modal-content">
+  <div class="form-wrapper">
+
+    <!-- Existing Patient Quick Selector -->
+    <div class="section-card glass-card">
+      <div class="section-header">
+        <ion-icon name="person-circle-outline" color="primary"></ion-icon>
+        <h3>Patient Selection & Demographics</h3>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Select Registered Patient (Auto-fill)</label>
+        <ion-select [(ngModel)]="selectedPatientId" (ionChange)="onPatientSelect(selectedPatientId)"
+          placeholder="Choose from patient directory..." interface="popover" class="custom-select">
+          <ion-select-option value="">-- New / Unregistered Patient --</ion-select-option>
+          <ion-select-option *ngFor="let p of patients" [value]="p.id">
+            {{ p.name }} ({{ p.mrn }} - {{ p.age }}y, {{ p.gender }})
+          </ion-select-option>
+        </ion-select>
+      </div>
+
+      <div class="grid-row">
+        <div class="grid-col-8">
+          <label class="field-label">Patient Full Name *</label>
+          <ion-input [(ngModel)]="patientName" placeholder="e.g. John Doe" class="custom-input"></ion-input>
+        </div>
+        <div class="grid-col-4">
+          <label class="field-label">Age *</label>
+          <ion-input type="number" [(ngModel)]="patientAge" placeholder="35" class="custom-input"></ion-input>
+        </div>
+      </div>
+
+      <div class="grid-row">
+        <div class="grid-col-4">
+          <label class="field-label">Gender</label>
+          <ion-select [(ngModel)]="patientGender" interface="popover" class="custom-select">
+            <ion-select-option value="Male">Male</ion-select-option>
+            <ion-select-option value="Female">Female</ion-select-option>
+            <ion-select-option value="Other">Other</ion-select-option>
+          </ion-select>
+        </div>
+        <div class="grid-col-4">
+          <label class="field-label">Blood Group</label>
+          <ion-select [(ngModel)]="patientBloodGroup" interface="popover" class="custom-select">
+            <ion-select-option *ngFor="let bg of bloodGroups" [value]="bg">{{ bg }}</ion-select-option>
+          </ion-select>
+        </div>
+        <div class="grid-col-4">
+          <label class="field-label">Phone Number</label>
+          <ion-input [(ngModel)]="patientPhone" placeholder="+1 (555) 000-0000" class="custom-input"></ion-input>
+        </div>
+      </div>
+    </div>
+
+    <!-- Appointment Schedule & Triage -->
+    <div class="section-card glass-card">
+      <div class="section-header">
+        <ion-icon name="time-outline" color="secondary"></ion-icon>
+        <h3>Date, Time & Consultation Mode</h3>
+      </div>
+
+      <div class="grid-row">
+        <div class="grid-col-6">
+          <label class="field-label">Appointment Date *</label>
+          <input type="date" [(ngModel)]="date" class="native-date-input" />
+        </div>
+        <div class="grid-col-6">
+          <label class="field-label">Time Slot *</label>
+          <ion-select [(ngModel)]="timeSlot" interface="popover" class="custom-select">
+            <ion-select-option *ngFor="let slot of timeSlots" [value]="slot">{{ slot }}</ion-select-option>
+          </ion-select>
+        </div>
+      </div>
+
+      <div class="grid-row">
+        <div class="grid-col-6">
+          <label class="field-label">Consultation Mode</label>
+          <ion-select [(ngModel)]="type" (ionChange)="updateFeeByType()" interface="popover" class="custom-select">
+            <ion-select-option value="in-person">In-Clinic Consultation</ion-select-option>
+            <ion-select-option value="video">Telehealth Video Call</ion-select-option>
+            <ion-select-option value="emergency">Emergency Immediate Triage</ion-select-option>
+            <ion-select-option value="lab-review">Lab Report Review</ion-select-option>
+          </ion-select>
+        </div>
+        <div class="grid-col-6">
+          <label class="field-label">Triage Priority</label>
+          <ion-select [(ngModel)]="urgency" interface="popover" class="custom-select">
+            <ion-select-option value="routine">Routine Checkup</ion-select-option>
+            <ion-select-option value="moderate">Moderate Attention</ion-select-option>
+            <ion-select-option value="urgent">Urgent Priority</ion-select-option>
+            <ion-select-option value="emergency">Critical / Emergency</ion-select-option>
+          </ion-select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Clinical Complaint & Details -->
+    <div class="section-card glass-card">
+      <div class="section-header">
+        <ion-icon name="medkit-outline" color="tertiary"></ion-icon>
+        <h3>Clinical Reason & Symptoms</h3>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Chief Complaint *</label>
+        <ion-textarea [(ngModel)]="chiefComplaint" rows="2"
+          placeholder="e.g. Chest discomfort on exertion, intermittent dizziness, palpitations..." class="custom-textarea">
+        </ion-textarea>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Symptoms (comma separated)</label>
+        <ion-input [(ngModel)]="symptomsInput" placeholder="e.g. Headache, shortness of breath, fatigue" class="custom-input"></ion-input>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Clinical / Triage Notes</label>
+        <ion-textarea [(ngModel)]="notes" rows="2"
+          placeholder="Internal notes for doctor or reception..." class="custom-textarea">
+        </ion-textarea>
+      </div>
+
+      <div class="grid-row align-center fee-row">
+        <div class="grid-col-6">
+          <label class="field-label">Consultation Fee ($)</label>
+          <ion-input type="number" [(ngModel)]="consultationFee" class="custom-input"></ion-input>
+        </div>
+        <div class="grid-col-6 flex-toggle">
+          <label class="field-label">Payment Status</label>
+          <div class="paid-toggle-box">
+            <ion-toggle [(ngModel)]="isPaid" color="success">
+              {{ isPaid ? 'Fee Paid' : 'Pending Payment' }}
+            </ion-toggle>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</ion-content>
+
+<ion-footer class="ion-no-border modal-footer">
+  <div class="action-buttons-row">
+    <ion-button (click)="dismiss()" fill="outline" color="medium" class="btn-cancel">
+      Cancel
+    </ion-button>
+    <ion-button (click)="saveAppointment()" color="primary" class="btn-save">
+      <ion-icon [name]="isEditMode ? 'checkmark-circle-outline' : 'calendar-outline'" slot="start"></ion-icon>
+      {{ isEditMode ? 'Update Appointment' : 'Confirm & Schedule' }}
+    </ion-button>
+  </div>
+</ion-footer>

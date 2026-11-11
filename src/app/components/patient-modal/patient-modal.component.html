@@ -1,0 +1,534 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar class="modal-toolbar">
+    <ion-title>
+      <div class="patient-header-title">
+        <ion-avatar class="header-avatar">
+          <img [src]="patient?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80'" alt="Patient" />
+        </ion-avatar>
+        <div class="patient-header-meta">
+          <h2 class="patient-title-name">{{ isNewPatient ? 'Register New Patient' : patient?.name }}</h2>
+          <span class="patient-mrn-badge">
+            {{ patient?.mrn }} &bull; {{ patient?.age }}y &bull; {{ patient?.gender }} &bull; Blood: <strong>{{ patient?.bloodGroup }}</strong>
+          </span>
+        </div>
+      </div>
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="dismiss()" fill="clear" color="medium">
+        <ion-icon name="close-circle-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+
+  <!-- Segment Navigation -->
+  <ion-toolbar class="segment-toolbar">
+    <ion-segment [(ngModel)]="activeTab" mode="md" class="patient-ehr-segment">
+      <ion-segment-button value="vitals">
+        <ion-icon name="pulse-outline"></ion-icon>
+        <ion-label>Vitals & Monitoring</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="history">
+        <ion-icon name="fitness-outline"></ion-icon>
+        <ion-label>History & Allergies</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="labs">
+        <ion-icon name="flask-outline"></ion-icon>
+        <ion-label>Lab Diagnostics ({{ patient?.labReports?.length || 0 }})</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="notes">
+        <ion-icon name="document-text-outline"></ion-icon>
+        <ion-label>SOAP Notes ({{ patient?.clinicalNotes?.length || 0 }})</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="prescriptions">
+        <ion-icon name="medkit-outline"></ion-icon>
+        <ion-label>Rx Records ({{ prescriptions.length }})</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding modal-content">
+  <div class="ehr-container">
+
+    <!-- TAB 1: VITALS & LIVE MONITORING -->
+    <div *ngIf="activeTab === 'vitals'" class="animate-fade-in">
+      <div class="vitals-header-row">
+        <div>
+          <h3 class="section-title">Current Physiological Vitals</h3>
+          <p class="section-subtitle">Last recorded: {{ patient?.currentVitals?.measuredAt || 'Just now' }}</p>
+        </div>
+        <ion-button (click)="showAddVitals = !showAddVitals" size="small" [color]="showAddVitals ? 'medium' : 'primary'">
+          <ion-icon [name]="showAddVitals ? 'close-outline' : 'add-outline'" slot="start"></ion-icon>
+          {{ showAddVitals ? 'Cancel' : 'Log New Reading' }}
+        </ion-button>
+      </div>
+
+      <!-- Add Vitals Form Drawer -->
+      <div *ngIf="showAddVitals" class="add-vitals-box glass-card animate-fade-in">
+        <h4 class="box-title">New Vitals Triage Log</h4>
+        <div class="grid-row">
+          <div class="grid-col-4">
+            <label class="field-label">Heart Rate (BPM)</label>
+            <ion-input type="number" [(ngModel)]="newVitals.heartRate" class="custom-input"></ion-input>
+          </div>
+          <div class="grid-col-4">
+            <label class="field-label">BP Systolic (mmHg)</label>
+            <ion-input type="number" [(ngModel)]="newVitals.bloodPressureSystolic" class="custom-input"></ion-input>
+          </div>
+          <div class="grid-col-4">
+            <label class="field-label">BP Diastolic (mmHg)</label>
+            <ion-input type="number" [(ngModel)]="newVitals.bloodPressureDiastolic" class="custom-input"></ion-input>
+          </div>
+        </div>
+        <div class="grid-row">
+          <div class="grid-col-4">
+            <label class="field-label">SpO2 Oxygen (%)</label>
+            <ion-input type="number" [(ngModel)]="newVitals.oxygenSaturation" class="custom-input"></ion-input>
+          </div>
+          <div class="grid-col-4">
+            <label class="field-label">Body Temp (°F)</label>
+            <ion-input type="number" step="0.1" [(ngModel)]="newVitals.temperature" class="custom-input"></ion-input>
+          </div>
+          <div class="grid-col-4">
+            <label class="field-label">Blood Glucose (mg/dL)</label>
+            <ion-input type="number" [(ngModel)]="newVitals.bloodGlucose" class="custom-input"></ion-input>
+          </div>
+        </div>
+        <div class="grid-row">
+          <div class="grid-col-4">
+            <label class="field-label">Weight (kg)</label>
+            <ion-input type="number" [(ngModel)]="newVitals.weightKg" (ionChange)="calculateBmi()" class="custom-input"></ion-input>
+          </div>
+          <div class="grid-col-4">
+            <label class="field-label">Height (cm)</label>
+            <ion-input type="number" [(ngModel)]="newVitals.heightCm" (ionChange)="calculateBmi()" class="custom-input"></ion-input>
+          </div>
+          <div class="grid-col-4">
+            <label class="field-label">Calculated BMI</label>
+            <ion-input type="number" [value]="newVitals.bmi" readonly class="custom-input readonly-input"></ion-input>
+          </div>
+        </div>
+        <div class="vitals-btn-row">
+          <ion-button (click)="saveNewVitals()" color="success" size="small">
+            <ion-icon name="checkmark-outline" slot="start"></ion-icon>
+            Save Vitals to Record
+          </ion-button>
+        </div>
+      </div>
+
+      <!-- Vitals Metric Grid -->
+      <div class="vitals-cards-grid">
+        <!-- Heart Rate Card with SVG ECG simulation -->
+        <div class="vital-card glass-card">
+          <div class="vital-card-top">
+            <span class="vital-name">Heart Rate</span>
+            <ion-icon name="heart" color="danger" class="vital-icon animate-float"></ion-icon>
+          </div>
+          <div class="vital-value-row">
+            <span class="vital-number">{{ patient?.currentVitals?.heartRate }}</span>
+            <span class="vital-unit">BPM</span>
+          </div>
+          <div class="ecg-wave-container">
+            <svg class="ecg-svg" viewBox="0 0 200 40">
+              <path class="ecg-path" d="M 0,20 L 40,20 L 50,5 L 60,35 L 70,12 L 80,24 L 90,20 L 130,20 L 140,5 L 150,35 L 160,12 L 170,24 L 180,20 L 200,20" />
+            </svg>
+          </div>
+          <div class="vital-status-pill" [class.status-normal]="patient?.currentVitals?.heartRate! <= 100 && patient?.currentVitals?.heartRate! >= 60"
+            [class.status-alert]="patient?.currentVitals?.heartRate! > 100 || patient?.currentVitals?.heartRate! < 60">
+            {{ patient?.currentVitals?.heartRate! > 100 ? 'Tachycardia Alert' : (patient?.currentVitals?.heartRate! < 60 ? 'Bradycardia' : 'Normal Sinus Rhythm') }}
+          </div>
+        </div>
+
+        <!-- Blood Pressure Card -->
+        <div class="vital-card glass-card">
+          <div class="vital-card-top">
+            <span class="vital-name">Blood Pressure</span>
+            <ion-icon name="speedometer-outline" color="primary" class="vital-icon"></ion-icon>
+          </div>
+          <div class="vital-value-row">
+            <span class="vital-number">{{ patient?.currentVitals?.bloodPressureSystolic }}/{{ patient?.currentVitals?.bloodPressureDiastolic }}</span>
+            <span class="vital-unit">mmHg</span>
+          </div>
+          <div class="bp-bar-box">
+            <div class="bp-bar-fill" [style.width.%]="(patient?.currentVitals?.bloodPressureSystolic! / 200) * 100"
+              [class.bg-danger]="patient?.currentVitals?.bloodPressureSystolic! >= 140"
+              [class.bg-success]="patient?.currentVitals?.bloodPressureSystolic! < 130">
+            </div>
+          </div>
+          <div class="vital-status-pill" [class.status-normal]="patient?.currentVitals?.bloodPressureSystolic! < 130"
+            [class.status-alert]="patient?.currentVitals?.bloodPressureSystolic! >= 140">
+            {{ patient?.currentVitals?.bloodPressureSystolic! >= 140 ? 'Hypertension Stage 2' : (patient?.currentVitals?.bloodPressureSystolic! >= 130 ? 'Elevated' : 'Optimal BP') }}
+          </div>
+        </div>
+
+        <!-- Oxygen Saturation Card -->
+        <div class="vital-card glass-card">
+          <div class="vital-card-top">
+            <span class="vital-name">SpO2 Oxygen</span>
+            <ion-icon name="water-outline" color="secondary" class="vital-icon"></ion-icon>
+          </div>
+          <div class="vital-value-row">
+            <span class="vital-number">{{ patient?.currentVitals?.oxygenSaturation }}%</span>
+            <span class="vital-unit">O2</span>
+          </div>
+          <div class="bp-bar-box">
+            <div class="bp-bar-fill" [style.width.%]="patient?.currentVitals?.oxygenSaturation!"
+              [class.bg-success]="patient?.currentVitals?.oxygenSaturation! >= 95"
+              [class.bg-danger]="patient?.currentVitals?.oxygenSaturation! < 95">
+            </div>
+          </div>
+          <div class="vital-status-pill" [class.status-normal]="patient?.currentVitals?.oxygenSaturation! >= 95"
+            [class.status-alert]="patient?.currentVitals?.oxygenSaturation! < 95">
+            {{ patient?.currentVitals?.oxygenSaturation! >= 95 ? 'Normal Saturation' : 'Desaturation Alert' }}
+          </div>
+        </div>
+
+        <!-- Temperature Card -->
+        <div class="vital-card glass-card">
+          <div class="vital-card-top">
+            <span class="vital-name">Body Temp</span>
+            <ion-icon name="thermometer-outline" color="warning" class="vital-icon"></ion-icon>
+          </div>
+          <div class="vital-value-row">
+            <span class="vital-number">{{ patient?.currentVitals?.temperature }}</span>
+            <span class="vital-unit">°F</span>
+          </div>
+          <div class="vital-status-pill" [class.status-normal]="patient?.currentVitals?.temperature! <= 99.0"
+            [class.status-alert]="patient?.currentVitals?.temperature! > 99.0">
+            {{ patient?.currentVitals?.temperature! > 99.0 ? 'Low-grade Pyrexia' : 'Normothermic' }}
+          </div>
+        </div>
+
+        <!-- Blood Sugar / Glucose -->
+        <div class="vital-card glass-card" *ngIf="patient?.currentVitals?.bloodGlucose">
+          <div class="vital-card-top">
+            <span class="vital-name">Blood Glucose</span>
+            <ion-icon name="analytics-outline" color="tertiary" class="vital-icon"></ion-icon>
+          </div>
+          <div class="vital-value-row">
+            <span class="vital-number">{{ patient?.currentVitals?.bloodGlucose }}</span>
+            <span class="vital-unit">mg/dL</span>
+          </div>
+          <div class="vital-status-pill" [class.status-normal]="patient?.currentVitals?.bloodGlucose! <= 140"
+            [class.status-alert]="patient?.currentVitals?.bloodGlucose! > 140">
+            {{ patient?.currentVitals?.bloodGlucose! > 140 ? 'Hyperglycemia Warning' : 'Euglycemic' }}
+          </div>
+        </div>
+
+        <!-- BMI Card -->
+        <div class="vital-card glass-card" *ngIf="patient?.currentVitals?.bmi">
+          <div class="vital-card-top">
+            <span class="vital-name">BMI Index</span>
+            <ion-icon name="body-outline" color="medium" class="vital-icon"></ion-icon>
+          </div>
+          <div class="vital-value-row">
+            <span class="vital-number">{{ patient?.currentVitals?.bmi }}</span>
+            <span class="vital-unit">kg/m²</span>
+          </div>
+          <div class="vital-status-pill" [class.status-normal]="patient?.currentVitals?.bmi! < 25"
+            [class.status-alert]="patient?.currentVitals?.bmi! >= 25">
+            {{ patient?.currentVitals?.bmi! >= 30 ? 'Obesity Class I' : (patient?.currentVitals?.bmi! >= 25 ? 'Overweight' : 'Normal Weight') }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Vitals History Table -->
+      <div class="section-card glass-card" style="margin-top: 20px;">
+        <h4 class="section-title">Vitals Historical Timeline</h4>
+        <div class="table-responsive">
+          <table class="clinical-table">
+            <thead>
+              <tr>
+                <th>Date / Time</th>
+                <th>Heart Rate</th>
+                <th>BP (Systolic/Dia)</th>
+                <th>SpO2</th>
+                <th>Temp</th>
+                <th>Glucose</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let v of patient?.vitalsHistory">
+                <td><strong>{{ v.measuredAt }}</strong></td>
+                <td>{{ v.heartRate }} bpm</td>
+                <td><span class="bp-tag">{{ v.bloodPressureSystolic }}/{{ v.bloodPressureDiastolic }}</span></td>
+                <td>{{ v.oxygenSaturation }}%</td>
+                <td>{{ v.temperature }}°F</td>
+                <td>{{ v.bloodGlucose ? v.bloodGlucose + ' mg/dL' : '--' }}</td>
+              </tr>
+              <tr *ngIf="!patient?.vitalsHistory?.length">
+                <td colspan="6" class="text-center empty-state-cell">No prior historical vitals recorded.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: MEDICAL HISTORY & ALLERGIES -->
+    <div *ngIf="activeTab === 'history'" class="animate-fade-in">
+      <div class="grid-row">
+        <!-- Allergies Section -->
+        <div class="grid-col-6">
+          <div class="section-card glass-card">
+            <div class="section-header">
+              <ion-icon name="warning-outline" color="danger"></ion-icon>
+              <h3>Allergies & Adverse Reactions</h3>
+            </div>
+
+            <div class="tags-container">
+              <div *ngFor="let item of patient?.allergies; let i = index" class="allergy-chip" [class]="'severity-' + item.severity">
+                <span>{{ item.allergen }} ({{ item.severity }})</span>
+                <ion-icon name="close-circle" (click)="removeAllergy(i)"></ion-icon>
+              </div>
+              <p *ngIf="!patient?.allergies?.length" class="empty-muted">No known drug allergies reported.</p>
+            </div>
+
+            <div class="add-tag-row">
+              <ion-input [(ngModel)]="newAllergen" placeholder="e.g. Penicillin, Peanuts..." class="custom-input"></ion-input>
+              <ion-select [(ngModel)]="newAllergySeverity" interface="popover" class="custom-select" style="max-width: 120px;">
+                <ion-select-option value="mild">Mild</ion-select-option>
+                <ion-select-option value="moderate">Moderate</ion-select-option>
+                <ion-select-option value="severe">Severe</ion-select-option>
+              </ion-select>
+              <ion-button (click)="addAllergy()" size="small" color="danger">Add</ion-button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chronic Conditions Section -->
+        <div class="grid-col-6">
+          <div class="section-card glass-card">
+            <div class="section-header">
+              <ion-icon name="heart-half-outline" color="tertiary"></ion-icon>
+              <h3>Chronic Conditions & Morbidities</h3>
+            </div>
+
+            <div class="tags-container">
+              <div *ngFor="let cond of patient?.chronicConditions; let i = index" class="condition-chip">
+                <span>{{ cond }}</span>
+                <ion-icon name="close-circle" (click)="removeCondition(i)"></ion-icon>
+              </div>
+              <p *ngIf="!patient?.chronicConditions?.length" class="empty-muted">No chronic conditions listed.</p>
+            </div>
+
+            <div class="add-tag-row">
+              <ion-input [(ngModel)]="newCondition" placeholder="e.g. Type-2 Diabetes, Hypertension..." class="custom-input"></ion-input>
+              <ion-button (click)="addCondition()" size="small" color="tertiary">Add</ion-button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Demographics & Insurance Details -->
+      <div class="section-card glass-card" style="margin-top: 18px;">
+        <div class="section-header">
+          <ion-icon name="shield-checkmark-outline" color="success"></ion-icon>
+          <h3>Insurance & Emergency Contact</h3>
+        </div>
+
+        <div class="grid-row">
+          <div class="grid-col-4">
+            <label class="field-label">Insurance Provider</label>
+            <ion-input [(ngModel)]="patient.insurance.provider" class="custom-input"></ion-input>
+          </div>
+          <div class="grid-col-4">
+            <label class="field-label">Policy Number</label>
+            <ion-input [(ngModel)]="patient.insurance.policyNumber" class="custom-input"></ion-input>
+          </div>
+          <div class="grid-col-4">
+            <label class="field-label">Valid Through</label>
+            <ion-input [(ngModel)]="patient.insurance.validTill" class="custom-input"></ion-input>
+          </div>
+        </div>
+
+        <div class="grid-row">
+          <div class="grid-col-4">
+            <label class="field-label">Emergency Contact Name</label>
+            <ion-input [(ngModel)]="patient.emergencyContact.name" class="custom-input"></ion-input>
+          </div>
+          <div class="grid-col-4">
+            <label class="field-label">Relationship</label>
+            <ion-input [(ngModel)]="patient.emergencyContact.relationship" class="custom-input"></ion-input>
+          </div>
+          <div class="grid-col-4">
+            <label class="field-label">Emergency Phone</label>
+            <ion-input [(ngModel)]="patient.emergencyContact.phone" class="custom-input"></ion-input>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: LAB & DIAGNOSTIC REPORTS -->
+    <div *ngIf="activeTab === 'labs'" class="animate-fade-in">
+      <div class="section-header-row">
+        <h3 class="section-title">Diagnostic Reports & Laboratory Investigations</h3>
+      </div>
+
+      <div class="labs-list">
+        <div *ngFor="let lab of patient?.labReports" class="lab-report-card glass-card">
+          <div class="lab-card-header">
+            <div>
+              <span class="lab-category-badge">{{ lab.category }}</span>
+              <h4 class="lab-name">{{ lab.testName }}</h4>
+              <span class="lab-date">Recorded: {{ lab.date }}</span>
+            </div>
+            <span class="status-badge" [class]="'badge-' + lab.status">
+              {{ lab.status | uppercase }}
+            </span>
+          </div>
+
+          <div class="lab-body">
+            <div class="lab-result-line">
+              <span class="result-label">Observed Value:</span>
+              <span class="result-val">{{ lab.result }}</span>
+            </div>
+            <div class="lab-ref-line">
+              <span class="ref-label">Clinical Reference Range:</span>
+              <span class="ref-val">{{ lab.referenceRange }} ({{ lab.unit }})</span>
+            </div>
+            <div *ngIf="lab.doctorNotes" class="lab-notes-box">
+              <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
+              <span>Dr. Note: {{ lab.doctorNotes }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="!patient?.labReports?.length" class="empty-state-card glass-card">
+          <ion-icon name="flask-outline" class="empty-state-icon"></ion-icon>
+          <p>No lab reports on record for this patient.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: CLINICAL SOAP NOTES -->
+    <div *ngIf="activeTab === 'notes'" class="animate-fade-in">
+      <div class="vitals-header-row">
+        <div>
+          <h3 class="section-title">Clinical Encounters & Doctor SOAP Notes</h3>
+          <p class="section-subtitle">Subjective, Objective, Assessment & Treatment Plan</p>
+        </div>
+        <ion-button (click)="showAddNote = !showAddNote" size="small" [color]="showAddNote ? 'medium' : 'primary'">
+          <ion-icon [name]="showAddNote ? 'close-outline' : 'create-outline'" slot="start"></ion-icon>
+          {{ showAddNote ? 'Cancel' : '+ New Clinical Note' }}
+        </ion-button>
+      </div>
+
+      <!-- Add Note Form -->
+      <div *ngIf="showAddNote" class="add-note-box glass-card animate-fade-in">
+        <h4 class="box-title">Document New Clinical Encounter</h4>
+        <div class="field-group">
+          <label class="field-label">Subjective (Patient symptoms, history, timeline)</label>
+          <ion-textarea [(ngModel)]="newNote.subjective" rows="2" placeholder="Patient reports..." class="custom-textarea"></ion-textarea>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Objective (Physical exam, vitals, findings)</label>
+          <ion-textarea [(ngModel)]="newNote.objective" rows="2" placeholder="Chest clear, S1/S2 heard..." class="custom-textarea"></ion-textarea>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Assessment (Working diagnosis & Differential diagnosis) *</label>
+          <ion-textarea [(ngModel)]="newNote.assessment" rows="2" placeholder="1. Essential Hypertension, uncontrolled..." class="custom-textarea"></ion-textarea>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Plan (Medications, labs ordered, counseling, follow-up)</label>
+          <ion-textarea [(ngModel)]="newNote.plan" rows="2" placeholder="Continue medications, re-evaluate in 4 weeks..." class="custom-textarea"></ion-textarea>
+        </div>
+        <ion-button (click)="saveClinicalNote()" color="primary" size="small">
+          <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
+          Save Clinical Note
+        </ion-button>
+      </div>
+
+      <!-- Notes Timeline -->
+      <div class="notes-timeline">
+        <div *ngFor="let note of patient?.clinicalNotes" class="note-card glass-card">
+          <div class="note-meta-row">
+            <span class="note-date"><ion-icon name="calendar-outline"></ion-icon> {{ note.date }}</span>
+            <span class="note-author"><ion-icon name="medkit-outline"></ion-icon> {{ note.doctorName }}</span>
+          </div>
+
+          <div class="soap-block">
+            <div class="soap-letter letter-s">S</div>
+            <div class="soap-content">
+              <strong>Subjective:</strong> {{ note.subjective || 'None recorded' }}
+            </div>
+          </div>
+          <div class="soap-block">
+            <div class="soap-letter letter-o">O</div>
+            <div class="soap-content">
+              <strong>Objective:</strong> {{ note.objective || 'None recorded' }}
+            </div>
+          </div>
+          <div class="soap-block">
+            <div class="soap-letter letter-a">A</div>
+            <div class="soap-content">
+              <strong>Assessment:</strong> {{ note.assessment }}
+            </div>
+          </div>
+          <div class="soap-block">
+            <div class="soap-letter letter-p">P</div>
+            <div class="soap-content">
+              <strong>Plan:</strong> {{ note.plan || 'Standard management' }}
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="!patient?.clinicalNotes?.length" class="empty-state-card glass-card">
+          <ion-icon name="document-text-outline" class="empty-state-icon"></ion-icon>
+          <p>No clinical SOAP notes recorded yet.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 5: PAST PRESCRIPTIONS -->
+    <div *ngIf="activeTab === 'prescriptions'" class="animate-fade-in">
+      <div class="section-header-row">
+        <h3 class="section-title">Prescription Archive</h3>
+      </div>
+
+      <div class="rx-archive-list">
+        <div *ngFor="let rx of prescriptions" class="rx-item-card glass-card">
+          <div class="rx-card-top">
+            <div>
+              <span class="rx-num">{{ rx.rxNumber }}</span>
+              <span class="rx-date">Prescribed on: {{ rx.date }}</span>
+            </div>
+            <span class="rx-doctor">{{ rx.doctorName }}</span>
+          </div>
+
+          <div class="rx-diagnosis-line">
+            <strong>Diagnosis:</strong>
+            <ion-chip *ngFor="let d of rx.diagnosis" color="primary" class="mini-chip">{{ d }}</ion-chip>
+          </div>
+
+          <div class="rx-meds-summary">
+            <strong>Medications ({{ rx.medications.length }}):</strong>
+            <ul>
+              <li *ngFor="let med of rx.medications">
+                <strong>{{ med.name }}</strong> ({{ med.dosage }}, {{ med.form }}) - {{ med.frequency }} for {{ med.durationDays }} days.
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div *ngIf="!prescriptions.length" class="empty-state-card glass-card">
+          <ion-icon name="medkit-outline" class="empty-state-icon"></ion-icon>
+          <p>No prescriptions issued yet for this patient.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</ion-content>
+
+<ion-footer class="ion-no-border modal-footer">
+  <div class="action-buttons-row">
+    <ion-button (click)="dismiss()" fill="outline" color="medium">
+      Close
+    </ion-button>
+    <ion-button (click)="savePatientFullRecord()" color="primary">
+      <ion-icon name="save-outline" slot="start"></ion-icon>
+      Save Patient Record
+    </ion-button>
+  </div>
+</ion-footer>

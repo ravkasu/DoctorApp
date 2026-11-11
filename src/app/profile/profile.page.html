@@ -1,0 +1,237 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar class="profile-toolbar">
+    <div class="profile-header-wrap">
+      <div class="title-meta">
+        <h1 class="page-title">Doctor Profile & Clinic OS</h1>
+        <p class="page-subtitle">Credentials, consultation fee schedule & clinic operations</p>
+      </div>
+
+      <ion-button (click)="toggleTheme()" fill="outline" color="medium" class="btn-theme">
+        <ion-icon [name]="isDark ? 'sunny-outline' : 'moon-outline'" slot="start"></ion-icon>
+        {{ isDark ? 'Light Mode' : 'Dark Mode' }}
+      </ion-button>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="profile-content">
+  <div class="app-container" *ngIf="profile$ | async as doc">
+
+    <!-- DOCTOR HERO CARD -->
+    <div class="doctor-hero-card glass-card animate-fade-in">
+      <div class="hero-left-col">
+        <div class="hero-avatar-box">
+          <img [src]="doc.avatar" alt="Dr. Vance" class="hero-avatar-img" />
+          <span class="verified-badge-icon" title="Board Certified">
+            <ion-icon name="checkmark-sharp"></ion-icon>
+          </span>
+        </div>
+
+        <div class="hero-meta">
+          <div class="name-status-row">
+            <h2 class="doc-full-name">{{ doc.name }}</h2>
+            <span class="availability-pill" [class]="'pill-' + doc.availabilityStatus">
+              {{ doc.availabilityStatus | uppercase }}
+            </span>
+          </div>
+          <p class="doc-credentials-title">{{ doc.title }}</p>
+          <p class="doc-council-reg">Medical Board Registration: <strong>{{ doc.registrationNumber }}</strong></p>
+
+          <div class="metrics-row-hero">
+            <div class="hero-stat-cell">
+              <span class="stat-big"><ion-icon name="star" color="warning"></ion-icon> {{ doc.rating }}</span>
+              <span class="stat-label">{{ doc.reviewCount }} Reviews</span>
+            </div>
+            <div class="hero-stat-cell">
+              <span class="stat-big">{{ doc.experienceYears }}+</span>
+              <span class="stat-label">Years Exp.</span>
+            </div>
+            <div class="hero-stat-cell">
+              <span class="stat-big">12.8k</span>
+              <span class="stat-label">Patients Treated</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Status Switcher Buttons -->
+      <div class="hero-right-col">
+        <span class="status-change-label">Quick Availability:</span>
+        <div class="status-btn-group">
+          <button class="status-btn" [class.active]="doc.availabilityStatus === 'online'" (click)="setDoctorStatus('online')">
+            🟢 Online
+          </button>
+          <button class="status-btn" [class.active]="doc.availabilityStatus === 'in-consult'" (click)="setDoctorStatus('in-consult')">
+            🟡 In Room
+          </button>
+          <button class="status-btn" [class.active]="doc.availabilityStatus === 'break'" (click)="setDoctorStatus('break')">
+            ☕ Break
+          </button>
+          <button class="status-btn" [class.active]="doc.availabilityStatus === 'offline'" (click)="setDoctorStatus('offline')">
+            ⚪ Offline
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TWO-COLUMN WORKSPACE: PRACTICE INFO & EARNINGS -->
+    <div class="profile-columns-layout">
+
+      <!-- LEFT: CLINIC LOCATION & FEE SCHEDULE -->
+      <div class="profile-col">
+
+        <!-- Clinic & Hospital Details -->
+        <div class="section-card glass-card animate-fade-in">
+          <div class="section-header">
+            <ion-icon name="business-outline" color="primary"></ion-icon>
+            <h3>Hospital & Practice Location</h3>
+          </div>
+
+          <div class="practice-info-list">
+            <div class="info-row">
+              <span class="info-label">Primary Institution:</span>
+              <span class="info-val"><strong>{{ doc.hospitalName }}</strong></span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Clinic Suite:</span>
+              <span class="info-val">{{ doc.clinicAddress }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Direct Line:</span>
+              <span class="info-val">{{ doc.phone }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Clinical Email:</span>
+              <span class="info-val">{{ doc.email }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Consultation Fees Configuration -->
+        <div class="section-card glass-card animate-fade-in">
+          <div class="section-header space-between">
+            <div class="flex-align">
+              <ion-icon name="cash-outline" color="secondary"></ion-icon>
+              <h3>Consultation Fee Schedule</h3>
+            </div>
+            <ion-button (click)="editFeesMode = !editFeesMode" size="small" [color]="editFeesMode ? 'medium' : 'primary'">
+              {{ editFeesMode ? 'Cancel' : 'Edit Rates' }}
+            </ion-button>
+          </div>
+
+          <div class="fee-rates-grid">
+            <div class="fee-card">
+              <span class="fee-type">In-Clinic Consult</span>
+              <div class="fee-input-wrap">
+                <span class="dollar-sign">$</span>
+                <input type="number" [(ngModel)]="inClinicFee" [disabled]="!editFeesMode" class="fee-input" />
+              </div>
+              <span class="fee-sub">Per 20 min slot</span>
+            </div>
+
+            <div class="fee-card">
+              <span class="fee-type">Telehealth Video</span>
+              <div class="fee-input-wrap">
+                <span class="dollar-sign">$</span>
+                <input type="number" [(ngModel)]="videoFee" [disabled]="!editFeesMode" class="fee-input" />
+              </div>
+              <span class="fee-sub">Encrypted Video HD</span>
+            </div>
+
+            <div class="fee-card">
+              <span class="fee-type">Emergency Triage</span>
+              <div class="fee-input-wrap">
+                <span class="dollar-sign">$</span>
+                <input type="number" [(ngModel)]="emergencyFee" [disabled]="!editFeesMode" class="fee-input" />
+              </div>
+              <span class="fee-sub">Immediate response</span>
+            </div>
+          </div>
+
+          <div *ngIf="editFeesMode" class="save-fees-row animate-fade-in">
+            <ion-button (click)="saveFees()" color="success" size="small">
+              <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
+              Save New Fee Schedule
+            </ion-button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT: EARNINGS ANALYTICS & APP PREFERENCES -->
+      <div class="profile-col">
+
+        <!-- Monthly Performance & Financial Overview -->
+        <div class="section-card glass-card animate-fade-in">
+          <div class="section-header">
+            <ion-icon name="trending-up-outline" color="success"></ion-icon>
+            <h3>Monthly Financial & Clinical Volume</h3>
+          </div>
+
+          <div class="financial-summary-grid">
+            <div class="fin-box">
+              <span class="fin-label">Gross Revenue (Nov)</span>
+              <span class="fin-val text-success">$18,450</span>
+              <span class="fin-trend">+14% vs last month</span>
+            </div>
+            <div class="fin-box">
+              <span class="fin-label">Completed Consults</span>
+              <span class="fin-val">124</span>
+              <span class="fin-trend">96 in-clinic &bull; 28 video</span>
+            </div>
+          </div>
+
+          <div class="volume-bar-box">
+            <div class="bar-label-line">
+              <span>In-Clinic (77%)</span>
+              <span>Telehealth (23%)</span>
+            </div>
+            <div class="stacked-bar">
+              <div class="stacked-segment seg-teal" style="width: 77%"></div>
+              <div class="stacked-segment seg-indigo" style="width: 23%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- System Settings & Data Reset -->
+        <div class="section-card glass-card animate-fade-in">
+          <div class="section-header">
+            <ion-icon name="settings-outline" color="medium"></ion-icon>
+            <h3>Application System & Preferences</h3>
+          </div>
+
+          <div class="settings-list">
+            <div class="setting-item">
+              <div>
+                <span class="setting-title">Dark / Light Interface Mode</span>
+                <span class="setting-desc">Switch between deep high-contrast dark theme & clinical crisp light theme</span>
+              </div>
+              <ion-toggle [checked]="isDark" (ionChange)="toggleTheme()" color="primary"></ion-toggle>
+            </div>
+
+            <div class="setting-item">
+              <div>
+                <span class="setting-title">Telemetry Critical Alerts & Sound</span>
+                <span class="setting-desc">Play chime alert when wearable patient sensors detect arrhythmia or BP spikes</span>
+              </div>
+              <ion-toggle [(ngModel)]="soundAlerts" color="success"></ion-toggle>
+            </div>
+
+            <div class="setting-item">
+              <div>
+                <span class="setting-title">Reset Demo Medical Dataset</span>
+                <span class="setting-desc">Revert local storage to default cardiology & triage patient records</span>
+              </div>
+              <ion-button (click)="resetAllData()" fill="outline" color="danger" size="small">
+                Reset Demo
+              </ion-button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+</ion-content>

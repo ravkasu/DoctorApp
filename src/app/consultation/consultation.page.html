@@ -1,0 +1,272 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar class="telehealth-top-bar">
+    <div class="top-bar-inner">
+      <div class="left-meta">
+        <ion-button (click)="confirmEndCall()" fill="clear" color="light" class="btn-back">
+          <ion-icon name="arrow-back-outline" slot="icon-only"></ion-icon>
+        </ion-button>
+        <div class="room-security-badge">
+          <span class="live-dot pulse-badge-success"></span>
+          <span class="room-id">ROOM #402 &bull; 256-BIT END-TO-END ENCRYPTED</span>
+        </div>
+      </div>
+
+      <div class="center-patient-title">
+        <span class="patient-title-text">{{ patient?.name }} ({{ patient?.age }}y, {{ patient?.bloodGroup }})</span>
+        <span class="call-timer-chip">
+          <ion-icon name="radio-button-on" color="danger" class="animate-float"></ion-icon>
+          {{ callTimerDisplay }}
+        </span>
+      </div>
+
+      <div class="right-controls">
+        <ion-button (click)="openInCallPrescription()" color="secondary" size="small" class="btn-quick-rx">
+          <ion-icon name="document-text-outline" slot="start"></ion-icon>
+          Issue Rx
+        </ion-button>
+        <ion-button (click)="toggleSidePanel()" fill="outline" color="light" size="small">
+          <ion-icon [name]="showSidePanel ? 'chevron-forward-outline' : 'albums-outline'" slot="start"></ion-icon>
+          {{ showSidePanel ? 'Hide Drawer' : 'Show Workspace' }}
+        </ion-button>
+      </div>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="telehealth-content" [fullscreen]="true">
+  <div class="video-suite-layout" [class.drawer-open]="showSidePanel">
+
+    <!-- MAIN VIDEO STAGE -->
+    <div class="video-stage-area">
+
+      <!-- Patient Feed Canvas -->
+      <div class="patient-video-feed">
+        <img [src]="patient?.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=1200&q=80'"
+          [alt]="patient?.name" class="feed-background-image" />
+        <div class="video-gradient-overlay"></div>
+
+        <!-- In-Feed Patient Status Tag -->
+        <div class="feed-top-tag">
+          <div class="patient-id-tag">
+            <span class="pat-name-hud">{{ patient?.name }}</span>
+            <span class="pat-mrn-hud">{{ patient?.mrn }}</span>
+          </div>
+          <div class="connection-quality">
+            <span class="bars">📶</span>
+            <span>HD 1080p (30fps)</span>
+          </div>
+        </div>
+
+        <!-- Live Vitals Overlay Ticker on Video -->
+        <div class="video-vitals-overlay glass-card">
+          <div class="v-tick">
+            <span class="v-label">BP</span>
+            <span class="v-number text-danger">{{ patient?.currentVitals?.bloodPressureSystolic }}/{{ patient?.currentVitals?.bloodPressureDiastolic }}</span>
+          </div>
+          <div class="v-tick">
+            <span class="v-label">HR</span>
+            <span class="v-number text-danger">{{ patient?.currentVitals?.heartRate }} bpm</span>
+          </div>
+          <div class="v-tick">
+            <span class="v-label">SpO2</span>
+            <span class="v-number text-success">{{ patient?.currentVitals?.oxygenSaturation }}%</span>
+          </div>
+          <div class="v-tick">
+            <span class="v-label">Temp</span>
+            <span class="v-number">{{ patient?.currentVitals?.temperature }}°F</span>
+          </div>
+        </div>
+
+        <!-- Picture-in-Picture Doctor View -->
+        <div class="pip-doctor-feed glass-card">
+          <img src="https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=400&q=80"
+            alt="Doctor Feed" class="pip-img" [class.video-paused]="isVideoOff" />
+          <div class="pip-overlay" *ngIf="isVideoOff">
+            <ion-icon name="videocam-off-outline"></ion-icon>
+            <span>Camera Paused</span>
+          </div>
+          <span class="pip-label">Dr. Alexander Vance (You)</span>
+          <span class="pip-mic-status" *ngIf="isMicMuted">
+            <ion-icon name="mic-off"></ion-icon>
+          </span>
+        </div>
+
+        <!-- FLOATING BOTTOM CONTROL DOCK -->
+        <div class="floating-controls-dock glass-card">
+          <!-- Mic Toggle -->
+          <button class="dock-btn" [class.btn-active]="!isMicMuted" [class.btn-muted]="isMicMuted" (click)="toggleMic()">
+            <ion-icon [name]="isMicMuted ? 'mic-off-outline' : 'mic-outline'"></ion-icon>
+            <span class="dock-label">{{ isMicMuted ? 'Unmute' : 'Mute' }}</span>
+          </button>
+
+          <!-- Camera Toggle -->
+          <button class="dock-btn" [class.btn-active]="!isVideoOff" [class.btn-muted]="isVideoOff" (click)="toggleVideo()">
+            <ion-icon [name]="isVideoOff ? 'videocam-off-outline' : 'videocam-outline'"></ion-icon>
+            <span class="dock-label">{{ isVideoOff ? 'Start Video' : 'Stop Video' }}</span>
+          </button>
+
+          <!-- Screen Share -->
+          <button class="dock-btn" [class.btn-highlight]="isScreenSharing" (click)="toggleScreenShare()">
+            <ion-icon name="tv-outline"></ion-icon>
+            <span class="dock-label">{{ isScreenSharing ? 'Sharing' : 'Share Screen' }}</span>
+          </button>
+
+          <!-- Rx Generator -->
+          <button class="dock-btn btn-rx" (click)="openInCallPrescription()">
+            <ion-icon name="document-text-outline"></ion-icon>
+            <span class="dock-label">Write Rx</span>
+          </button>
+
+          <!-- Drawer Toggle -->
+          <button class="dock-btn" (click)="toggleSidePanel()">
+            <ion-icon name="chatbubbles-outline"></ion-icon>
+            <span class="dock-label">Chat & Notes</span>
+          </button>
+
+          <!-- End Call Button -->
+          <button class="dock-btn btn-end-call" (click)="confirmEndCall()">
+            <ion-icon name="call-outline"></ion-icon>
+            <span class="dock-label">End Consult</span>
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- IN-CALL CLINICAL WORKSPACE DRAWER -->
+    <div *ngIf="showSidePanel" class="in-call-drawer glass-card animate-fade-in">
+      <div class="drawer-header">
+        <ion-segment [(ngModel)]="sidePanelTab" mode="ios" class="drawer-segment">
+          <ion-segment-button value="vitals">
+            <ion-label>Telemetry</ion-label>
+          </ion-segment-button>
+          <ion-segment-button value="chat">
+            <ion-label>Live Chat</ion-label>
+          </ion-segment-button>
+          <ion-segment-button value="notes">
+            <ion-label>SOAP Notes</ion-label>
+          </ion-segment-button>
+        </ion-segment>
+      </div>
+
+      <div class="drawer-body">
+
+        <!-- TAB A: LIVE VITALS HUD -->
+        <div *ngIf="sidePanelTab === 'vitals'" class="vitals-drawer-pane animate-fade-in">
+          <div class="pane-title-row">
+            <span class="pane-title">Real-Time Telemetry Feed</span>
+            <span class="pulse-tag pulse-badge-danger">Arrhythmia Alert</span>
+          </div>
+
+          <div class="telemetry-box">
+            <div class="ecg-strip">
+              <svg class="ecg-svg" viewBox="0 0 250 40">
+                <path class="ecg-path" d="M 0,20 L 40,20 L 50,5 L 60,35 L 70,12 L 80,24 L 90,20 L 130,20 L 140,5 L 150,35 L 160,12 L 170,24 L 180,20 L 250,20" />
+              </svg>
+            </div>
+            <div class="vital-grid-small">
+              <div class="v-cell">
+                <span class="v-cell-label">Blood Pressure</span>
+                <span class="v-cell-val text-danger">{{ patient?.currentVitals?.bloodPressureSystolic }}/{{ patient?.currentVitals?.bloodPressureDiastolic }}</span>
+              </div>
+              <div class="v-cell">
+                <span class="v-cell-label">Heart Rate</span>
+                <span class="v-cell-val text-danger">{{ patient?.currentVitals?.heartRate }} bpm</span>
+              </div>
+              <div class="v-cell">
+                <span class="v-cell-label">SpO2 Oxygen</span>
+                <span class="v-cell-val text-success">{{ patient?.currentVitals?.oxygenSaturation }}%</span>
+              </div>
+              <div class="v-cell">
+                <span class="v-cell-label">Blood Glucose</span>
+                <span class="v-cell-val">{{ patient?.currentVitals?.bloodGlucose }} mg/dL</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chronic History Snapshot -->
+          <div class="history-snapshot">
+            <h4 class="h-title">Chronic Conditions</h4>
+            <div class="chips-wrap">
+              <span *ngFor="let c of patient?.chronicConditions" class="cond-pill">{{ c }}</span>
+            </div>
+
+            <h4 class="h-title" style="margin-top: 10px;">Known Allergies</h4>
+            <div class="chips-wrap">
+              <span *ngFor="let a of patient?.allergies" class="allergy-pill">
+                <ion-icon name="warning"></ion-icon> {{ a.allergen }} ({{ a.severity }})
+              </span>
+              <span *ngIf="!patient?.allergies?.length" class="text-muted" style="font-size: 0.75rem;">None reported.</span>
+            </div>
+          </div>
+
+          <ion-button (click)="openInCallPrescription()" expand="block" color="primary" class="btn-drawer-rx">
+            <ion-icon name="document-text-outline" slot="start"></ion-icon>
+            Draft Prescription During Call
+          </ion-button>
+        </div>
+
+        <!-- TAB B: ENCRYPTED IN-CALL CHAT -->
+        <div *ngIf="sidePanelTab === 'chat'" class="chat-drawer-pane animate-fade-in">
+          <div class="messages-scroll-area">
+            <div *ngFor="let msg of messages$ | async" class="chat-bubble-wrap" [class]="'msg-' + msg.sender">
+              <div class="bubble-inner" [class]="'bubble-' + msg.sender">
+                <p class="bubble-text">{{ msg.message }}</p>
+                <span class="bubble-time">{{ msg.timestamp }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Reply Suggestion Chips -->
+          <div class="quick-replies-row">
+            <span (click)="sendQuickReply('Please take 3 slow deep breaths while I monitor your pulse.')" class="quick-chip">Take deep breaths</span>
+            <span (click)="sendQuickReply('I am preparing your digital prescription now.')" class="quick-chip">Drafting Rx</span>
+            <span (click)="sendQuickReply('Let us re-check your BP in 5 minutes.')" class="quick-chip">Re-check BP</span>
+          </div>
+
+          <div class="chat-input-bar">
+            <ion-input [(ngModel)]="chatInput" (keyup.enter)="sendMessage()" placeholder="Type secure medical advice..." class="chat-input"></ion-input>
+            <ion-button (click)="sendMessage()" size="small" color="primary">
+              <ion-icon name="send" slot="icon-only"></ion-icon>
+            </ion-button>
+          </div>
+        </div>
+
+        <!-- TAB C: QUICK SOAP CLINICAL NOTES -->
+        <div *ngIf="sidePanelTab === 'notes'" class="notes-drawer-pane animate-fade-in">
+          <div class="pane-title-row">
+            <span class="pane-title">Encounter SOAP Notes</span>
+          </div>
+
+          <div class="soap-field-group">
+            <label class="s-label">Subjective (Symptoms)</label>
+            <ion-textarea [(ngModel)]="inCallNote.subjective" rows="2" class="custom-textarea"></ion-textarea>
+          </div>
+
+          <div class="soap-field-group">
+            <label class="s-label">Objective (Observed)</label>
+            <ion-textarea [(ngModel)]="inCallNote.objective" rows="2" class="custom-textarea"></ion-textarea>
+          </div>
+
+          <div class="soap-field-group">
+            <label class="s-label">Assessment (Diagnosis)</label>
+            <ion-textarea [(ngModel)]="inCallNote.assessment" rows="2" class="custom-textarea"></ion-textarea>
+          </div>
+
+          <div class="soap-field-group">
+            <label class="s-label">Plan (Medications & Followup)</label>
+            <ion-textarea [(ngModel)]="inCallNote.plan" rows="2" class="custom-textarea"></ion-textarea>
+          </div>
+
+          <ion-button (click)="saveInCallNotes()" expand="block" color="success" size="small">
+            <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
+            Save Notes to Patient EHR
+          </ion-button>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</ion-content>

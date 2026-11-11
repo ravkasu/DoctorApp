@@ -1,0 +1,96 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar class="rx-toolbar">
+    <div class="rx-header-wrap">
+      <div class="title-meta">
+        <h1 class="page-title">Digital Prescriptions (e-Rx)</h1>
+        <p class="page-subtitle">Generate, verify & print official digital prescriptions with verified signature</p>
+      </div>
+
+      <ion-button (click)="openNewPrescriptionModal()" color="primary" class="btn-new-rx">
+        <ion-icon name="add-outline" slot="start"></ion-icon>
+        Create New e-Rx
+      </ion-button>
+    </div>
+  </ion-toolbar>
+
+  <ion-toolbar class="filters-toolbar">
+    <div class="filters-container">
+      <ion-searchbar [(ngModel)]="searchQuery" placeholder="Search by patient, Rx number, medicine, diagnosis..."
+        class="rx-searchbar" debounce="200">
+      </ion-searchbar>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="rx-content">
+  <div class="app-container">
+
+    <div class="rx-cards-grid" *ngIf="prescriptions$ | async as rxList">
+      <ng-container *ngFor="let rx of rxList">
+        <div *ngIf="matchesSearch(rx)" class="rx-card glass-card animate-fade-in" (click)="viewPrescription(rx)">
+
+          <div class="rx-card-top-bar">
+            <div>
+              <span class="rx-number-tag">{{ rx.rxNumber }}</span>
+              <span class="rx-date-text">&bull; Issued {{ rx.date }}</span>
+            </div>
+            <span class="security-code-badge">
+              <ion-icon name="shield-checkmark" color="success"></ion-icon>
+              {{ rx.qrVerificationCode }}
+            </span>
+          </div>
+
+          <div class="rx-card-patient-info">
+            <h3 class="pat-name">{{ rx.patientName }}</h3>
+            <span class="pat-meta">{{ rx.patientAge }} yrs &bull; {{ rx.patientGender }}</span>
+          </div>
+
+          <div class="rx-diag-row">
+            <span class="diag-label">Diagnosis:</span>
+            <span *ngFor="let d of rx.diagnosis" class="diag-pill">{{ d }}</span>
+          </div>
+
+          <!-- Medications List Snapshot -->
+          <div class="meds-snapshot-box">
+            <div class="box-head">
+              <span>PRESCRIBED MEDICATIONS ({{ rx.medications.length }})</span>
+            </div>
+            <ul class="meds-ul">
+              <li *ngFor="let med of rx.medications">
+                <span class="med-name"><strong>{{ med.name }}</strong> ({{ med.dosage }}, {{ med.form }})</span>
+                <span class="med-freq">{{ med.frequency }} &bull; {{ med.durationDays }}d</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="rx-card-footer">
+            <div class="doc-stamp-meta">
+              <span class="doc-label">Prescribing Physician:</span>
+              <span class="doc-val">{{ rx.doctorName }}</span>
+            </div>
+
+            <div class="rx-buttons-wrap">
+              <ion-button (click)="$event.stopPropagation(); viewPrescription(rx)" size="small" color="primary">
+                <ion-icon name="print-outline" slot="start"></ion-icon>
+                View & Print
+              </ion-button>
+            </div>
+          </div>
+
+        </div>
+      </ng-container>
+
+      <div *ngIf="!rxList.length" class="empty-state-box glass-card">
+        <ion-icon name="document-text-outline" class="empty-icon"></ion-icon>
+        <p>No prescriptions issued yet. Click "Create New e-Rx" to issue your first prescription.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed" class="rx-fab">
+    <ion-fab-button (click)="openNewPrescriptionModal()" color="primary">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+</ion-content>

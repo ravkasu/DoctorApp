@@ -1,0 +1,144 @@
+.modal-toolbar {
+  --background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.toolbar-title-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.modal-content {
+  --background: var(--ion-background-color, #f8fafc);
+}
+
+.form-wrapper {
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.section-card {
+  padding: 18px;
+  border-radius: 16px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--glass-border);
+
+  ion-icon {
+    font-size: 1.4rem;
+  }
+
+  h3 {
+    margin: 0;
+    font-size: 1.02rem;
+    font-weight: 700;
+    color: var(--app-text-main);
+  }
+}
+
+.field-group {
+  margin-bottom: 14px;
+}
+
+.field-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--app-text-muted);
+  margin-bottom: 6px;
+}
+
+.custom-input,
+.custom-textarea,
+.custom-select {
+  --background: rgba(241, 245, 249, 0.6);
+  --border-radius: 10px;
+  --padding-start: 12px;
+  --padding-end: 12px;
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  font-size: 0.95rem;
+  color: var(--app-text-main);
+}
+
+.native-date-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  background: rgba(241, 245, 249, 0.6);
+  color: var(--app-text-main);
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.grid-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.grid-col-4 {
+  flex: 1 1 calc(33.333% - 12px);
+  min-width: 120px;
+}
+
+.grid-col-6 {
+  flex: 1 1 calc(50% - 12px);
+  min-width: 180px;
+}
+
+.grid-col-8 {
+  flex: 2 1 calc(66.666% - 12px);
+  min-width: 200px;
+}
+
+.flex-toggle {
+  display: flex;
+  flex-direction: column;
+}
+
+.paid-toggle-box {
+  padding: 8px 12px;
+  background: rgba(241, 245, 249, 0.5);
+  border-radius: 10px;
+  border: 1px solid var(--glass-border);
+}
+
+.modal-footer {
+  --background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--glass-border);
+  padding: 12px 18px;
+}
+
+.action-buttons-row {
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+
+  ion-button {
+    --border-radius: 12px;
+    font-weight: 600;
+  }
+}

@@ -1,0 +1,379 @@
+<ion-header class="ion-no-border no-print">
+  <ion-toolbar class="modal-toolbar">
+    <ion-title>
+      <div class="rx-header-title">
+        <ion-icon name="document-text-outline" color="primary"></ion-icon>
+        <span>{{ previewMode ? 'Official Digital Rx Sheet Preview' : 'Clinical e-Prescription Generator' }}</span>
+      </div>
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="togglePreview()" fill="outline" color="primary" class="preview-toggle-btn">
+        <ion-icon [name]="previewMode ? 'create-outline' : 'eye-outline'" slot="start"></ion-icon>
+        {{ previewMode ? 'Back to Editor' : 'Preview Official Rx' }}
+      </ion-button>
+      <ion-button (click)="dismiss()" fill="clear" color="medium">
+        <ion-icon name="close-circle-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding modal-content">
+
+  <!-- ================= MODE 1: RX BUILDER ================= -->
+  <div *ngIf="!previewMode" class="rx-builder-container animate-fade-in">
+
+    <!-- Patient Selection & Critical Allergy Warning Banner -->
+    <div class="section-card glass-card">
+      <div class="grid-row align-center">
+        <div class="grid-col-6">
+          <label class="field-label">Select Patient</label>
+          <ion-select [(ngModel)]="selectedPatientId" (ionChange)="onPatientChange()" interface="popover" class="custom-select">
+            <ion-select-option *ngFor="let p of patients" [value]="p.id">
+              {{ p.name }} ({{ p.mrn }} - {{ p.age }}y, {{ p.gender }})
+            </ion-select-option>
+          </ion-select>
+        </div>
+        <div class="grid-col-6" *ngIf="selectedPatient">
+          <div class="patient-quick-badge">
+            <span>Blood Group: <strong>{{ selectedPatient.bloodGroup }}</strong></span>
+            <span>Current BP: <strong>{{ selectedPatient.currentVitals.bloodPressureSystolic }}/{{ selectedPatient.currentVitals.bloodPressureDiastolic }} mmHg</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Prominent Allergy Alert Banner -->
+      <div *ngIf="selectedPatient && selectedPatient.allergies.length" class="allergy-alert-banner animate-fade-in">
+        <ion-icon name="alert-circle" color="danger"></ion-icon>
+        <div>
+          <strong>CONTRAINDICATION WARNING - Patient Allergies:</strong>
+          <span *ngFor="let a of selectedPatient.allergies" class="allergy-tag">
+            {{ a.allergen }} ({{ a.severity | uppercase }})
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Diagnosis & ICD-10 Coding -->
+    <div class="section-card glass-card">
+      <div class="section-header">
+        <ion-icon name="clipboard-outline" color="primary"></ion-icon>
+        <h3>Diagnosis & Clinical Impression</h3>
+      </div>
+      <div class="grid-row">
+        <div class="grid-col-8">
+          <label class="field-label">Primary Diagnosis (comma separated)</label>
+          <ion-input [(ngModel)]="diagnosisInput" placeholder="e.g. Essential Hypertension, Type-2 Diabetes..." class="custom-input"></ion-input>
+        </div>
+        <div class="grid-col-4">
+          <label class="field-label">ICD-10 Code(s)</label>
+          <ion-input [(ngModel)]="icdCodeInput" placeholder="e.g. I10, E11.9" class="custom-input"></ion-input>
+        </div>
+      </div>
+    </div>
+
+    <!-- Medications Builder -->
+    <div class="section-card glass-card">
+      <div class="section-header space-between">
+        <div class="flex-align">
+          <ion-icon name="medkit-outline" color="secondary"></ion-icon>
+          <h3>Medications & Regimen (Rx)</h3>
+        </div>
+        <ion-button (click)="addMedicationRow()" size="small" color="secondary">
+          <ion-icon name="add-outline" slot="start"></ion-icon>
+          Add Drug
+        </ion-button>
+      </div>
+
+      <!-- Quick Common Drug Selection Chips -->
+      <div class="quick-drugs-row">
+        <span class="quick-label">Quick Pick:</span>
+        <div class="drug-chips-scroll">
+          <ion-chip *ngFor="let qd of commonMedicines" (click)="selectQuickDrug(0, qd)" class="quick-drug-chip">
+            {{ qd.name }} {{ qd.dosage }}
+          </ion-chip>
+        </div>
+      </div>
+
+      <!-- Medication Table Rows -->
+      <div class="med-list">
+        <div *ngFor="let med of medications; let i = index" class="med-row-card">
+          <div class="med-row-header">
+            <span class="med-index">#{{ i + 1 }}</span>
+            <div class="med-main-input">
+              <label class="field-label">Drug / Brand Name *</label>
+              <ion-input [(ngModel)]="med.name" placeholder="e.g. Amlodipine Besylate" class="custom-input"></ion-input>
+            </div>
+            <div class="med-dosage-input">
+              <label class="field-label">Dosage</label>
+              <ion-input [(ngModel)]="med.dosage" placeholder="10 mg" class="custom-input"></ion-input>
+            </div>
+            <div class="med-form-input">
+              <label class="field-label">Form</label>
+              <ion-select [(ngModel)]="med.form" interface="popover" class="custom-select">
+                <ion-select-option value="Tablet">Tablet</ion-select-option>
+                <ion-select-option value="Capsule">Capsule</ion-select-option>
+                <ion-select-option value="Syrup">Syrup</ion-select-option>
+                <ion-select-option value="Inhaler">Inhaler</ion-select-option>
+                <ion-select-option value="Injection">Injection</ion-select-option>
+                <ion-select-option value="Ointment">Ointment</ion-select-option>
+                <ion-select-option value="Drops">Drops</ion-select-option>
+              </ion-select>
+            </div>
+            <ion-button (click)="removeMedicationRow(i)" fill="clear" color="danger" class="btn-remove-med">
+              <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+            </ion-button>
+          </div>
+
+          <div class="med-row-details">
+            <div class="grid-col-3">
+              <label class="field-label">Frequency</label>
+              <ion-select [(ngModel)]="med.frequency" interface="popover" class="custom-select">
+                <ion-select-option value="OD (Once daily)">OD (Once daily)</ion-select-option>
+                <ion-select-option value="BD (Twice daily)">BD (Twice daily)</ion-select-option>
+                <ion-select-option value="TDS (Thrice daily)">TDS (Thrice daily)</ion-select-option>
+                <ion-select-option value="QID (4 times daily)">QID (4 times)</ion-select-option>
+                <ion-select-option value="PRN (As needed)">PRN (As needed)</ion-select-option>
+              </ion-select>
+            </div>
+            <div class="grid-col-3">
+              <label class="field-label">Timing</label>
+              <ion-select [(ngModel)]="med.timing" interface="popover" class="custom-select">
+                <ion-select-option value="Before meals">Before meals</ion-select-option>
+                <ion-select-option value="After meals">After meals</ion-select-option>
+                <ion-select-option value="With meals">With meals</ion-select-option>
+                <ion-select-option value="Empty stomach">Empty stomach</ion-select-option>
+                <ion-select-option value="At bedtime">At bedtime</ion-select-option>
+              </ion-select>
+            </div>
+            <div class="grid-col-2">
+              <label class="field-label">Duration (Days)</label>
+              <ion-input type="number" [(ngModel)]="med.durationDays" class="custom-input"></ion-input>
+            </div>
+            <div class="grid-col-4">
+              <label class="field-label">Special Directions</label>
+              <ion-input [(ngModel)]="med.instructions" placeholder="Take with full glass of water" class="custom-input"></ion-input>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lab Orders & Dietary Precautions -->
+    <div class="section-card glass-card">
+      <div class="section-header">
+        <ion-icon name="nutrition-outline" color="tertiary"></ion-icon>
+        <h3>Investigations, Diet & Follow-up</h3>
+      </div>
+      <div class="grid-row">
+        <div class="grid-col-6">
+          <label class="field-label">Recommended Lab Tests / Diagnostics</label>
+          <ion-textarea [(ngModel)]="orderedLabTestsInput" rows="2" placeholder="e.g. Fasting Blood Sugar, Lipid Profile..." class="custom-textarea"></ion-textarea>
+        </div>
+        <div class="grid-col-6">
+          <label class="field-label">Dietary & Lifestyle Advice</label>
+          <ion-textarea [(ngModel)]="dietaryAdvice" rows="2" placeholder="e.g. Low sodium, 30 mins brisk walk..." class="custom-textarea"></ion-textarea>
+        </div>
+      </div>
+      <div class="grid-row">
+        <div class="grid-col-8">
+          <label class="field-label">Clinical Doctor Notes</label>
+          <ion-textarea [(ngModel)]="clinicalNotes" rows="2" placeholder="Precautions and instructions..." class="custom-textarea"></ion-textarea>
+        </div>
+        <div class="grid-col-4">
+          <label class="field-label">Next Follow-up Date</label>
+          <input type="date" [(ngModel)]="followUpDate" class="native-date-input" />
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ================= MODE 2: PRINTABLE OFFICIAL DIGITAL RX SHEET ================= -->
+  <div *ngIf="previewMode" class="printable-rx-container animate-fade-in">
+
+    <!-- Action Bar for Print & Share -->
+    <div class="rx-action-banner no-print">
+      <div class="banner-text">
+        <ion-icon name="checkmark-done-circle" color="success"></ion-icon>
+        <span>Digital Rx compiled with cryptographic stamp. Ready to print or transmit.</span>
+      </div>
+      <div class="banner-buttons">
+        <ion-button (click)="printPrescription()" color="primary" size="small">
+          <ion-icon name="print-outline" slot="start"></ion-icon>
+          Print / Save PDF
+        </ion-button>
+        <ion-button (click)="shareViaEmailOrSms()" color="secondary" size="small">
+          <ion-icon name="send-outline" slot="start"></ion-icon>
+          Send to Patient
+        </ion-button>
+      </div>
+    </div>
+
+    <!-- Official Paper Sheet -->
+    <div class="printable-rx-sheet glass-card">
+
+      <!-- Header Letterhead -->
+      <div class="rx-letterhead">
+        <div class="clinic-brand">
+          <div class="clinic-logo-icon">✚</div>
+          <div>
+            <h1 class="clinic-name">METROPOLITAN HEART & VASCULAR INSTITUTE</h1>
+            <p class="clinic-sub">Department of Cardiology, Critical Care & Internal Medicine</p>
+            <p class="clinic-address">Pavilion 4, Suite 402, 5th Avenue Medical Plaza, New York, NY &bull; Tel: (555) 234-8900</p>
+          </div>
+        </div>
+
+        <div class="doctor-credentials">
+          <h2 class="doctor-name">Dr. Alexander Vance, MD, FACC</h2>
+          <p class="doctor-sub">Senior Consultant Cardiologist & Interventional Fellow</p>
+          <p class="doctor-reg">State Med Board Reg: <strong>MED-NY-849201</strong></p>
+          <p class="rx-date-stamp">Date: <strong>{{ savedPrescription?.date }}</strong></p>
+        </div>
+      </div>
+
+      <div class="rx-divider-thick"></div>
+
+      <!-- Patient Demographics Bar -->
+      <div class="rx-patient-bar">
+        <div class="rx-meta-cell">
+          <span class="cell-label">Patient Name:</span>
+          <span class="cell-val"><strong>{{ savedPrescription?.patientName }}</strong></span>
+        </div>
+        <div class="rx-meta-cell">
+          <span class="cell-label">Age / Gender:</span>
+          <span class="cell-val">{{ savedPrescription?.patientAge }} Yrs / {{ savedPrescription?.patientGender }}</span>
+        </div>
+        <div class="rx-meta-cell">
+          <span class="cell-label">MRN:</span>
+          <span class="cell-val">{{ selectedPatient?.mrn || 'MRN-78421' }}</span>
+        </div>
+        <div class="rx-meta-cell">
+          <span class="cell-label">Blood Group:</span>
+          <span class="cell-val"><strong>{{ selectedPatient?.bloodGroup || 'O+' }}</strong></span>
+        </div>
+        <div class="rx-meta-cell">
+          <span class="cell-label">Rx Number:</span>
+          <span class="cell-val rx-number-highlight">{{ savedPrescription?.rxNumber }}</span>
+        </div>
+      </div>
+
+      <!-- Vitals snapshot line -->
+      <div class="rx-vitals-strip" *ngIf="selectedPatient && selectedPatient.currentVitals">
+        <span>Vitals at Consult: BP: {{ selectedPatient.currentVitals.bloodPressureSystolic }}/{{ selectedPatient.currentVitals.bloodPressureDiastolic }} mmHg</span> &bull;
+        <span>HR: {{ selectedPatient.currentVitals.heartRate }} bpm</span> &bull;
+        <span>SpO2: {{ selectedPatient.currentVitals.oxygenSaturation }}%</span> &bull;
+        <span>Weight: {{ selectedPatient.currentVitals.weightKg || 70 }} kg</span>
+      </div>
+
+      <!-- Diagnosis Line -->
+      <div class="rx-diagnosis-block">
+        <span class="rx-section-badge">DIAGNOSIS / CLINICAL IMPRESSION:</span>
+        <div class="diag-tags-list">
+          <span *ngFor="let d of savedPrescription?.diagnosis" class="diag-tag">{{ d }}</span>
+          <span class="icd-tag" *ngFor="let c of savedPrescription?.icdCodes">(ICD-10: {{ c }})</span>
+        </div>
+      </div>
+
+      <!-- Rx Symbol & Medication Table -->
+      <div class="rx-content-body">
+        <div class="rx-symbol">℞</div>
+
+        <table class="rx-med-table">
+          <thead>
+            <tr>
+              <th style="width: 5%">#</th>
+              <th style="width: 35%">Medication & Strength</th>
+              <th style="width: 15%">Dosage / Form</th>
+              <th style="width: 20%">Frequency & Timing</th>
+              <th style="width: 10%">Duration</th>
+              <th style="width: 15%">Directions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let med of savedPrescription?.medications; let idx = index">
+              <td><strong>{{ idx + 1 }}.</strong></td>
+              <td>
+                <div class="med-name-bold">{{ med.name }}</div>
+                <div class="med-generic-small">{{ med.genericName || med.name }}</div>
+              </td>
+              <td>{{ med.dosage }} ({{ med.form }})</td>
+              <td>
+                <span class="timing-badge">{{ med.frequency }}</span>
+                <div class="timing-sub">{{ med.timing }}</div>
+              </td>
+              <td><strong>{{ med.durationDays }} Days</strong></td>
+              <td class="instructions-cell">{{ med.instructions }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Ordered Labs & Advice -->
+      <div class="rx-advice-grid">
+        <div class="advice-box" *ngIf="savedPrescription?.orderedLabTests?.length">
+          <h4>LABORATORY INVESTIGATIONS ORDERED</h4>
+          <ul>
+            <li *ngFor="let lab of savedPrescription?.orderedLabTests">{{ lab }}</li>
+          </ul>
+        </div>
+        <div class="advice-box">
+          <h4>DIETARY & LIFESTYLE PRECAUTIONS</h4>
+          <p>{{ savedPrescription?.dietaryAdvice }}</p>
+        </div>
+      </div>
+
+      <div class="rx-notes-footer" *ngIf="savedPrescription?.clinicalNotes">
+        <strong>Doctor's Advice:</strong> {{ savedPrescription?.clinicalNotes }}
+      </div>
+
+      <div class="rx-followup-row">
+        <span>Next Appointment / Review: <strong>{{ savedPrescription?.followUpDate }}</strong></span>
+      </div>
+
+      <!-- Footer with Stamp & QR Code -->
+      <div class="rx-footer-seal-row">
+        <div class="qr-verify-box">
+          <div class="qr-code-placeholder">
+            <ion-icon name="qr-code-outline" class="qr-icon"></ion-icon>
+            <div class="qr-text">
+              <span>Digital Verification QR</span>
+              <code>{{ savedPrescription?.qrVerificationCode }}</code>
+            </div>
+          </div>
+          <p class="dispense-notice">Scan to authenticate original prescription with pharmacy network.</p>
+        </div>
+
+        <div class="signature-box">
+          <div class="signature-line">
+            <span class="digital-sig-cursive">Alexander Vance, MD</span>
+          </div>
+          <p class="sig-name">Dr. Alexander Vance, MD, FACC</p>
+          <p class="sig-title">Senior Consultant Cardiologist</p>
+          <div class="verified-seal-pill">
+            <ion-icon name="checkmark-circle" color="success"></ion-icon>
+            <span>Electronically Signed & Authenticated</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</ion-content>
+
+<ion-footer class="ion-no-border modal-footer no-print">
+  <div class="action-buttons-row">
+    <ion-button (click)="dismiss()" fill="outline" color="medium">
+      Close
+    </ion-button>
+    <ion-button *ngIf="!previewMode" (click)="togglePreview()" color="secondary">
+      <ion-icon name="eye-outline" slot="start"></ion-icon>
+      Review Official Rx
+    </ion-button>
+    <ion-button (click)="saveAndIssuePrescription()" color="primary">
+      <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
+      Save & Issue Prescription
+    </ion-button>
+  </div>
+</ion-footer>
