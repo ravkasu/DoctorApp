@@ -27,7 +27,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      - run: npm install --no-audit --no-fund
       - run: npm run build -- --base-href /DoctorApp/
       - run: cp www/index.html www/404.html
       - uses: actions/upload-pages-artifact@v3
